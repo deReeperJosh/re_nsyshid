@@ -1,8 +1,8 @@
-FROM ghcr.io/wiiu-env/devkitppc:20230621
+FROM ghcr.io/wiiu-env/devkitppc:20241128
 
-COPY --from=ghcr.io/wiiu-env/wiiumodulesystem:20230719 /artifacts $DEVKITPRO
-COPY --from=ghcr.io/wiiu-env/wiiupluginsystem:20230719 /artifacts $DEVKITPRO
-COPY --from=ghcr.io/wiiu-env/libnotifications:20230621 /artifacts $DEVKITPRO
+COPY --from=ghcr.io/wiiu-env/wiiumodulesystem:20250219 /artifacts $DEVKITPRO
+COPY --from=ghcr.io/wiiu-env/wiiupluginsystem:20250208 /artifacts $DEVKITPRO
+COPY --from=ghcr.io/wiiu-env/libnotifications:20250204 /artifacts $DEVKITPRO
 
 RUN \
 mkdir wut && \
