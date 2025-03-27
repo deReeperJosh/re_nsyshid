@@ -1,4 +1,5 @@
 #include "re_nsyshid.hpp"
+#include "utils/logger.h"
 
 #include <list>
 #include <whb/log.h>
@@ -10,16 +11,19 @@ std::list<HIDClient*> clientList;
 
 int32_t Setup()
 {
+  DEBUG_FUNCTION_LINE("nsyshid:HIDSetup Called");
   return 0;
 }
 
 int32_t Teardown()
 {
+  DEBUG_FUNCTION_LINE("nsyshid:HIDTeardown Called");
   return 0;
 }
 
 int32_t AddClient(HIDClient* client, HIDAttachCallback attachCallback)
 {
+  DEBUG_FUNCTION_LINE("nsyshid:HIDAddClient Called");
   client->attachCallback = attachCallback;
 
   clientList.push_front(client);
@@ -29,6 +33,7 @@ int32_t AddClient(HIDClient* client, HIDAttachCallback attachCallback)
 
 int32_t DelClient(HIDClient* client)
 {
+  DEBUG_FUNCTION_LINE("nsyshid:HIDDelClient Called");
   clientList.remove(client);
 
   return 0;
@@ -39,6 +44,7 @@ int32_t GetDescriptor(uint32_t handle, uint8_t descriptorType, uint8_t descripto
                       HIDCallback callback, void* userContext)
 {
   // TO DO
+  DEBUG_FUNCTION_LINE("nsyshid:HIDGetDescriptor Called");
   return 0;
 }
 
@@ -47,6 +53,7 @@ int32_t SetDescriptor(uint32_t handle, uint8_t descriptorType, uint8_t descripto
                       HIDCallback callback, void* userContext)
 {
   // TO DO
+  DEBUG_FUNCTION_LINE("nsyshid:HIDSetDescriptor Called");
   return 0;
 }
 
@@ -54,6 +61,7 @@ int32_t GetReport(uint32_t handle, uint8_t reportType, uint8_t reportId, uint8_t
                   uint32_t bufferLength, HIDCallback callback, void* userContext)
 {
   // TO DO
+  DEBUG_FUNCTION_LINE("nsyshid:HIDGetReport Called");
   return 0;
 }
 
@@ -61,6 +69,7 @@ int32_t SetReport(uint32_t handle, uint8_t reportType, uint8_t reportId, uint8_t
                   uint32_t bufferLength, HIDCallback callback, void* userContext)
 {
   // TO DO
+  DEBUG_FUNCTION_LINE("nsyshid:HIDSetReport Called");
   return 0;
 }
 
@@ -68,6 +77,7 @@ int32_t GetIdle(uint32_t handle, uint8_t interfaceIndex, uint8_t reportId, uint8
                 HIDCallback callback, void* userContext)
 {
   // TO DO
+  DEBUG_FUNCTION_LINE("nsyshid:HIDGetIdle Called");
   return 0;
 }
 
@@ -75,6 +85,7 @@ int32_t SetIdle(uint32_t handle, uint8_t interfaceIndex, uint8_t reportId, uint8
                 HIDCallback callback, void* userContext)
 {
   // TO DO
+  DEBUG_FUNCTION_LINE("nsyshid:HIDSetIdle Called");
   return 0;
 }
 
@@ -82,6 +93,7 @@ int32_t GetProtocol(uint32_t handle, uint8_t interfaceIndex, uint8_t* protocol,
                     HIDCallback callback, void* userContext)
 {
   // TO DO
+  DEBUG_FUNCTION_LINE("nsyshid:HIDGetProtocol Called");
   return 0;
 }
 
@@ -89,6 +101,7 @@ int32_t SetProtocol(uint32_t handle, uint8_t interfaceIndex, uint8_t protocol, H
                     void* userContext)
 {
   // TO DO
+  DEBUG_FUNCTION_LINE("nsyshid:HIDSetProtocol Called");
   return 0;
 }
 
@@ -96,6 +109,7 @@ int32_t Read(uint32_t handle, uint8_t* buffer, uint32_t bufferLength, HIDCallbac
              void* userContext)
 {
   // TO DO
+  DEBUG_FUNCTION_LINE("nsyshid:HIDRead Called");
   return 0;
 }
 
@@ -103,6 +117,7 @@ int32_t Write(uint32_t handle, uint8_t* buffer, uint32_t bufferLength, HIDCallba
               void* userContext)
 {
   // TO DO
+  DEBUG_FUNCTION_LINE("nsyshid:HIDWrite Called");
   return 0;
 }
 }  // namespace re::nsyshid

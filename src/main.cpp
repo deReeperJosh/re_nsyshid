@@ -1,5 +1,6 @@
 #include <coreinit/debug.h>
 #include <wums.h>
+#include "utils/logger.h"
 
 WUMS_MODULE_EXPORT_NAME("nsyshid");
 WUMS_MODULE_AUTHOR("deReeperJosh");
@@ -31,11 +32,13 @@ WUMS_INITIALIZE(/*wums_app_init_args_t*/ args)
   {
     OSFatal("The module information struct version does not match.");
   }
+  initLogging();
 }
 
 WUMS_APPLICATION_STARTS()
 {
   /* Called whenever a new application has been started */
+  initLogging();
 }
 
 WUMS_APPLICATION_REQUESTS_EXIT()
@@ -46,6 +49,7 @@ WUMS_APPLICATION_REQUESTS_EXIT()
 WUMS_APPLICATION_ENDS()
 {
   /* Called whenever a application actually ends */
+  deinitLogging();
 }
 
 WUMS_RELOCATIONS_DONE()
