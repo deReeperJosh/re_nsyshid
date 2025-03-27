@@ -11,8 +11,6 @@ TOPDIR ?= $(CURDIR)
 include $(DEVKITPRO)/wups/share/wups_rules
 
 WUT_ROOT := $(DEVKITPRO)/wut
-WUMS_ROOT := $(DEVKITPRO)/wums
-
 #-------------------------------------------------------------------------------
 # TARGET is the name of the output
 # BUILD is the directory where object files & intermediate files will be placed
@@ -20,43 +18,32 @@ WUMS_ROOT := $(DEVKITPRO)/wums
 # DATA is a list of directories containing data files
 # INCLUDES is a list of directories containing header files
 #-------------------------------------------------------------------------------
-TARGET		:=	re_nfpii
+TARGET		:=	ExamplePluginCPP
 BUILD		:=	build
-SOURCES		:=	source \
-			source/config \
-			source/debug \
-			source/utils
+SOURCES		:=	src src/utils
 DATA		:=	data
-INCLUDES	:=	include \
-			../include \
-			source
+INCLUDES	:=	src
 
 #-------------------------------------------------------------------------------
 # options for code generation
 #-------------------------------------------------------------------------------
-CFLAGS	:=	-Wall -O2 -ffunction-sections \
+CFLAGS	:=	-g -Wall -O2 -ffunction-sections \
 			$(MACHDEP)
 
-CFLAGS	+=	$(INCLUDE) -D__WIIU__ -D__WUT__ -D__WUPS__ \
-		-DVERSION_MAJOR=$(VERSION_MAJOR) \
-		-DVERSION_MINOR=$(VERSION_MINOR) \
-		-DVERSION_PATCH=$(VERSION_PATCH)
+CFLAGS	+=	$(INCLUDE) -D__WIIU__ -D__WUT__ -D__WUPS__ 
 
-CFLAGS	+=	-Wno-address-of-packed-member
+CXXFLAGS	:= $(CFLAGS) -std=c++20
 
-CXXFLAGS	:= $(CFLAGS) -std=gnu++20
-CFLAGS	+=	-std=gnu11
+ASFLAGS	:=	-g $(ARCH)
+LDFLAGS	=	-g $(ARCH) $(RPXSPECS) -Wl,-Map,$(notdir $*.map) $(WUPSSPECS) 
 
-ASFLAGS	:=	$(ARCH)
-LDFLAGS	=	$(ARCH) $(RPXSPECS) -Wl,-Map,$(notdir $*.map) $(WUPSSPECS) 
-
-LIBS	:=	-lnotifications -lwups -lwut
+LIBS	:= -lwups -lwut 
 
 #-------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level
 # containing include and lib
 #-------------------------------------------------------------------------------
-LIBDIRS	:= $(PORTLIBS) $(WUMS_ROOT) $(WUPS_ROOT) $(WUT_ROOT)
+LIBDIRS	:= $(PORTLIBS) $(WUPS_ROOT) $(WUT_ROOT)
 
 #-------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional
@@ -76,7 +63,6 @@ export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
 SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-DEFFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.def)))
 BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
 
 #-------------------------------------------------------------------------------
@@ -94,7 +80,7 @@ endif
 #-------------------------------------------------------------------------------
 
 export OFILES_BIN	:=	$(addsuffix .o,$(BINFILES))
-export OFILES_SRC	:=	$(DEFFILES:.def=.o) $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
+export OFILES_SRC	:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
 export OFILES 	:=	$(OFILES_BIN) $(OFILES_SRC)
 export HFILES_BIN	:=	$(addsuffix .h,$(subst .,_,$(BINFILES)))
 
@@ -110,7 +96,7 @@ export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 all: $(BUILD)
 
 $(BUILD):
-	@[ -d $@ ] || mkdir -p $@
+	@$(shell [ ! -d $(BUILD) ] && mkdir -p $(BUILD))
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
 #-------------------------------------------------------------------------------
@@ -141,12 +127,6 @@ $(OFILES_SRC)	: $(HFILES_BIN)
 #-------------------------------------------------------------------------------
 	@echo $(notdir $<)
 	@$(bin2o)
-#-------------------------------------------------------------------------------
-%.o: %.def
-#-------------------------------------------------------------------------------
-	$(SILENTMSG) $(notdir $<)
-	$(SILENTCMD)rplimportgen $< $*.s $*.ld $(ERROR_FILTER)
-	$(SILENTCMD)$(CC) -x assembler-with-cpp $(ASFLAGS) -c $*.s -o $@ $(ERROR_FILTER)
 
 -include $(DEPENDS)
 

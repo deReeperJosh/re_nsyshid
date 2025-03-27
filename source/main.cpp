@@ -1,115 +1,47 @@
+#include <coreinit/debug.h>
 #include <wums.h>
 
-#include <whb/libmanager.h>
-#include <whb/log_cafe.h>
-#include <whb/log_module.h>
-#include <whb/log_udp.h>
+WUMS_MODULE_EXPORT_NAME("homebrew_examplemodule");
+WUMS_MODULE_AUTHOR("Maschell");
+WUMS_MODULE_VERSION("0.1");
+WUMS_MODULE_LICENSE("GPL");
+WUMS_MODULE_DESCRIPTION("Just an example module");
 
-#include <nfpii.h>
-#include <re_nfpii/re_nfpii.hpp>
+/**
+ * If this modules depends on another module (e.g. the FunctionPatcherModule) you can add a dependency to that module.
+ * This will enforce that the other module has been loaded and initialized before this module is initialized.
+ * If the other module is not loaded, this module also fails to load.
+ * Usage: WUMS_DEPENDS_ON(export_name)
+ * Example: WUMS_DEPENDS_ON(homebrew_functionpatcher)
+ */
 
-#include "utils/LogHandler.hpp"
+WUMS_INITIALIZE(/*wums_app_init_args_t*/ args) {
+    /* Called once when the module has been loaded */
 
-#define STR_VALUE(arg) #arg
-#define VERSION_STRING(x, y, z) "v" STR_VALUE(x) "." STR_VALUE(y) "." STR_VALUE(z)
+    // Information about the module can be get via the (optional) argument
+    module_information_t *module_information = args.module_information;
 
-WUMS_MODULE_EXPORT_NAME("nn_nfp");
-WUMS_MODULE_DESCRIPTION("A nn_nfp reimplementation with support for Amiibo emulation");
-WUMS_MODULE_AUTHOR("GaryOderNichts");
-WUMS_MODULE_VERSION(VERSION_STRING(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH));
-WUMS_MODULE_LICENSE("GPLv2");
-
-WUMS_INITIALIZE(myargs)
-{
-    if (!WHBLogModuleInit()) {
-        WHBLogCafeInit();
-        WHBLogUdpInit();
+    if (module_information == nullptr) {
+        OSFatal("Failed to get module_information pointer.");
     }
-
-    LogHandler::Init();
-}
-
-WUMS_APPLICATION_STARTS()
-{
-    if (!WHBLogModuleInit()) {
-        WHBLogCafeInit();
-        WHBLogUdpInit();
+    // Make sure the module is using a compatible version with the loader
+    if (module_information->version != MODULE_INFORMATION_VERSION) {
+        OSFatal("The module information struct version does not match.");
     }
 }
 
-WUMS_APPLICATION_ENDS()
-{
-    // Call finalize in case the application doesn't
-    re::nfpii::tagManager.Finalize();
+WUMS_APPLICATION_STARTS() {
+    /* Called whenever a new application has been started */
 }
 
-uint32_t NfpiiGetVersion(void)
-{
-    return NFPII_VERSION(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+WUMS_APPLICATION_REQUESTS_EXIT() {
+    /* Called whenever a application wants to exit */
 }
 
-// custom exports for the configuration plugin
-bool NfpiiIsInitialized(void)
-{
-    return re::nfpii::tagManager.IsInitialized();
+WUMS_APPLICATION_ENDS() {
+    /* Called whenever a application actually ends */
 }
 
-void NfpiiSetEmulationState(NfpiiEmulationState state)
-{
-    LogHandler::Info("Module: Updated emulation state to: %d", state);
-
-    re::nfpii::tagManager.SetEmulationState(state);
+WUMS_RELOCATIONS_DONE() {
+    /* Called whenever the relocations have been updated, but before WUMS_APPLICATION_STARTS() */
 }
-
-NfpiiEmulationState NfpiiGetEmulationState(void)
-{
-    return re::nfpii::tagManager.GetEmulationState();
-}
-
-void NfpiiSetUUIDRandomizationState(NfpiiUUIDRandomizationState state)
-{
-    LogHandler::Info("Module: Updated uuid random state to: %d", state);
-
-    re::nfpii::tagManager.SetUUIDRandomizationState(state);
-}
-
-NfpiiUUIDRandomizationState NfpiiGetUUIDRandomizationState(void)
-{
-    return re::nfpii::tagManager.GetUUIDRandomizationState();
-}
-
-void NfpiiSetRemoveAfterSeconds(float seconds)
-{
-    LogHandler::Info("Module: Updated remove after seconds to: %.1fs", seconds);
-
-    re::nfpii::tagManager.SetRemoveAfterSeconds(seconds);
-}
-
-void NfpiiSetTagEmulationPath(const char* path)
-{
-    LogHandler::Info("Module: Update tag emulation path to: '%s'", path);
-
-    re::nfpii::tagManager.SetTagEmulationPath(path);
-}
-
-const char* NfpiiGetTagEmulationPath(void)
-{
-    return re::nfpii::tagManager.GetTagEmulationPath().c_str();
-}
-
-NFCError NfpiiQueueNFCGetTagInfo(NFCGetTagInfoCallbackFn callback, void* arg)
-{
-    LogHandler::Info("Module: Queued NFCGetTagInfo");
-
-    return re::nfpii::tagManager.QueueNFCGetTagInfo(callback, arg);
-}
-
-WUMS_EXPORT_FUNCTION(NfpiiIsInitialized);
-WUMS_EXPORT_FUNCTION(NfpiiSetEmulationState);
-WUMS_EXPORT_FUNCTION(NfpiiGetEmulationState);
-WUMS_EXPORT_FUNCTION(NfpiiSetUUIDRandomizationState);
-WUMS_EXPORT_FUNCTION(NfpiiGetUUIDRandomizationState);
-WUMS_EXPORT_FUNCTION(NfpiiSetRemoveAfterSeconds);
-WUMS_EXPORT_FUNCTION(NfpiiSetTagEmulationPath);
-WUMS_EXPORT_FUNCTION(NfpiiGetTagEmulationPath);
-WUMS_EXPORT_FUNCTION(NfpiiQueueNFCGetTagInfo);

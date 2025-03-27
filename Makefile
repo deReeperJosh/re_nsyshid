@@ -12,14 +12,6 @@ include $(DEVKITPRO)/wums/share/wums_rules
 
 WUMS_ROOT := $(DEVKITPRO)/wums
 WUT_ROOT := $(DEVKITPRO)/wut
-
-#-------------------------------------------------------------------------------
-# Version used for the module and plugin
-#-------------------------------------------------------------------------------
-export VERSION_MAJOR	:=	0
-export VERSION_MINOR	:=	3
-export VERSION_PATCH	:=	0
-
 #-------------------------------------------------------------------------------
 # TARGET is the name of the output
 # BUILD is the directory where object files & intermediate files will be placed
@@ -27,43 +19,37 @@ export VERSION_PATCH	:=	0
 # DATA is a list of directories containing data files
 # INCLUDES is a list of directories containing header files
 #-------------------------------------------------------------------------------
-TARGET		:=	re_nfpii
+TARGET		:=	ExampleModule
 BUILD		:=	build
-SOURCES		:=	source \
-			source/config \
-			source/debug \
-			source/re_nfpii \
-			source/utils
+SOURCES		:=	source
 DATA		:=	data
-INCLUDES	:=	include \
-			source
+INCLUDES	:=	source
 
 #-------------------------------------------------------------------------------
 # options for code generation
 #-------------------------------------------------------------------------------
-CFLAGS	:=	-Wall -Os -ffunction-sections \
+CFLAGS	:=	-Wall -Wextra -O2 -ffunction-sections\
 			$(MACHDEP)
 
-CFLAGS	+=	$(INCLUDE) -D__WIIU__ -D__WUT__ \
-		-DVERSION_MAJOR=$(VERSION_MAJOR) \
-		-DVERSION_MINOR=$(VERSION_MINOR) \
-		-DVERSION_PATCH=$(VERSION_PATCH)
+CFLAGS	+=	$(INCLUDE) -D__WIIU__ -D__WUT__
 
-CFLAGS	+=	-Wno-address-of-packed-member
+CXXFLAGS	:= $(CFLAGS) -std=c++17 
 
-CXXFLAGS	:= $(CFLAGS) -std=gnu++20
-CFLAGS	+=	-std=gnu11
+ASFLAGS	:=	-g $(ARCH)
+LDFLAGS	=	-g $(ARCH) $(RPXSPECS) -Wl,-Map,$(notdir $*.map) $(WUMSSPECS) 
 
-ASFLAGS	:=	$(ARCH)
-LDFLAGS	=	$(ARCH) $(RPXSPECS) -Wl,-Map,$(notdir $*.map) $(WUMSSPECS) 
+ifeq ($(DEBUG),1)
+CXXFLAGS += -DDEBUG -g
+CFLAGS += -DDEBUG -g
+endif
 
-LIBS	:=	-lwums -lwut
+LIBS	:= -lwums -lwut
 
 #-------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level
 # containing include and lib
 #-------------------------------------------------------------------------------
-LIBDIRS	:= $(PORTLIBS) $(WUMS_ROOT) $(WUT_ROOT)
+LIBDIRS	:= $(PORTLIBS) $(WUT_ROOT) $(WUMS_ROOT)
 
 #-------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional
@@ -115,12 +101,6 @@ export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 #-------------------------------------------------------------------------------
 all: $(BUILD)
 
-dist: all
-	mkdir -p dist/modules/
-	cp *.wms dist/modules/
-	mkdir -p dist/plugins/
-	cp plugin/*.wps dist/plugins/
-
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
@@ -129,7 +109,7 @@ $(BUILD):
 #-------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr dist $(BUILD) $(TARGET).wms $(TARGET).elf
+	@rm -fr $(BUILD) $(TARGET).wms $(TARGET).elf
 	@$(MAKE) --no-print-directory -C $(CURDIR)/plugin -f $(CURDIR)/plugin/Makefile clean
 
 #-------------------------------------------------------------------------------
@@ -141,10 +121,10 @@ DEPENDS	:=	$(OFILES:.o=.d)
 #-------------------------------------------------------------------------------
 # main targets
 #-------------------------------------------------------------------------------
-all	:	$(OUTPUT).wms
+all	:	 $(OUTPUT).wms
 
 $(OUTPUT).wms	:	$(OUTPUT).elf
-$(OUTPUT).elf	:	$(OFILES)
+$(OUTPUT).elf	:   $(OFILES)
 
 $(OFILES_SRC)	: $(HFILES_BIN)
 
@@ -155,6 +135,11 @@ $(OFILES_SRC)	: $(HFILES_BIN)
 #-------------------------------------------------------------------------------
 	@echo $(notdir $<)
 	@$(bin2o)
+
+#---------------------------------------------------------------------------------
+%.o: %.s
+	@echo $(notdir $<)
+	@$(CC) -MMD -MP -MF $(DEPSDIR)/$*.d -x assembler-with-cpp $(ASFLAGS) -c $< -o $@ $(ERROR_FILTER)
 
 -include $(DEPENDS)
 
