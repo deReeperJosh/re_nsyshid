@@ -1,115 +1,111 @@
 #include "re_nsyshid.hpp"
 
 #include <list>
+#include <whb/log.h>
 #include <wums.h>
 
 namespace re::nsyshid
 {
+std::list<HIDClient*> clientList;
 
-	std::list<HIDClient*> clientList;
+int32_t Setup()
+{
+  return 0;
+}
 
-	int32_t Setup()
-	{
-		return 0;
-	}
+int32_t Teardown()
+{
+  return 0;
+}
 
-	int32_t Teardown()
-	{
-		return 0;
-	}
+int32_t AddClient(HIDClient* client, HIDAttachCallback attachCallback)
+{
+  client->attachCallback = attachCallback;
 
-	int32_t AddClient(HIDClient* client, HIDAttachCallback attachCallback)
-	{
-		client->attachCallback = attachCallback;
+  clientList.push_front(client);
 
-		clientList.push_front(client);
+  return 0;
+}
 
-		return 0;
-	}
+int32_t DelClient(HIDClient* client)
+{
+  clientList.remove(client);
 
-	int32_t DelClient(HIDClient* client)
-	{
-		clientList.remove(client);
+  return 0;
+}
 
-		return 0;
-	}
+int32_t GetDescriptor(uint32_t handle, uint8_t descriptorType, uint8_t descriptorIndex,
+                      uint16_t languageId, uint8_t* buffer, uint32_t bufferLength,
+                      HIDCallback callback, void* userContext)
+{
+  // TO DO
+  return 0;
+}
 
-	int32_t GetDescriptor(uint32_t handle, uint8_t descriptorType,
-						  uint8_t descriptorIndex, uint16_t languageId,
-						  uint8_t* buffer, uint32_t bufferLength,
-						  HIDCallback callback, void* userContext)
-	{
-		// TO DO
-		return 0;
-	}
+int32_t SetDescriptor(uint32_t handle, uint8_t descriptorType, uint8_t descriptorIndex,
+                      uint16_t languageId, uint8_t* buffer, uint32_t bufferLength,
+                      HIDCallback callback, void* userContext)
+{
+  // TO DO
+  return 0;
+}
 
-	int32_t SetDescriptor(uint32_t handle, uint8_t descriptorType,
-						  uint8_t descriptorIndex, uint16_t languageId,
-						  uint8_t* buffer, uint32_t bufferLength,
-						  HIDCallback callback, void* userContext)
-	{
-		// TO DO
-		return 0;
-	}
+int32_t GetReport(uint32_t handle, uint8_t reportType, uint8_t reportId, uint8_t* buffer,
+                  uint32_t bufferLength, HIDCallback callback, void* userContext)
+{
+  // TO DO
+  return 0;
+}
 
-	int32_t GetReport(uint32_t handle, uint8_t reportType, uint8_t reportId,
-					  uint8_t* buffer, uint32_t bufferLength, HIDCallback callback,
-					  void* userContext)
-	{
-		// TO DO
-		return 0;
-	}
+int32_t SetReport(uint32_t handle, uint8_t reportType, uint8_t reportId, uint8_t* buffer,
+                  uint32_t bufferLength, HIDCallback callback, void* userContext)
+{
+  // TO DO
+  return 0;
+}
 
-	int32_t SetReport(uint32_t handle, uint8_t reportType, uint8_t reportId,
-					  uint8_t* buffer, uint32_t bufferLength, HIDCallback callback,
-					  void* userContext)
-	{
-		// TO DO
-		return 0;
-	}
+int32_t GetIdle(uint32_t handle, uint8_t interfaceIndex, uint8_t reportId, uint8_t* duration,
+                HIDCallback callback, void* userContext)
+{
+  // TO DO
+  return 0;
+}
 
-	int32_t GetIdle(uint32_t handle, uint8_t interfaceIndex, uint8_t reportId,
-					uint8_t* duration, HIDCallback callback, void* userContext)
-	{
-		// TO DO
-		return 0;
-	}
+int32_t SetIdle(uint32_t handle, uint8_t interfaceIndex, uint8_t reportId, uint8_t duration,
+                HIDCallback callback, void* userContext)
+{
+  // TO DO
+  return 0;
+}
 
-	int32_t SetIdle(uint32_t handle, uint8_t interfaceIndex, uint8_t reportId,
-					uint8_t duration, HIDCallback callback, void* userContext)
-	{
-		// TO DO
-		return 0;
-	}
+int32_t GetProtocol(uint32_t handle, uint8_t interfaceIndex, uint8_t* protocol,
+                    HIDCallback callback, void* userContext)
+{
+  // TO DO
+  return 0;
+}
 
-	int32_t GetProtocol(uint32_t handle, uint8_t interfaceIndex, uint8_t* protocol,
-						HIDCallback callback, void* userContext)
-	{
-		// TO DO
-		return 0;
-	}
+int32_t SetProtocol(uint32_t handle, uint8_t interfaceIndex, uint8_t protocol, HIDCallback callback,
+                    void* userContext)
+{
+  // TO DO
+  return 0;
+}
 
-	int32_t SetProtocol(uint32_t handle, uint8_t interfaceIndex, uint8_t protocol,
-						HIDCallback callback, void* userContext)
-	{
-		// TO DO
-		return 0;
-	}
+int32_t Read(uint32_t handle, uint8_t* buffer, uint32_t bufferLength, HIDCallback callback,
+             void* userContext)
+{
+  // TO DO
+  return 0;
+}
 
-	int32_t Read(uint32_t handle, uint8_t* buffer, uint32_t bufferLength,
-				 HIDCallback callback, void* userContext)
-	{
-		// TO DO
-		return 0;
-	}
-
-	int32_t Write(uint32_t handle, uint8_t* buffer, uint32_t bufferLength,
-				  HIDCallback hc, void* userContext)
-	{
-		// TO DO
-		return 0;
-	}
-} // namespace re::nsyshid
+int32_t Write(uint32_t handle, uint8_t* buffer, uint32_t bufferLength, HIDCallback hc,
+              void* userContext)
+{
+  // TO DO
+  return 0;
+}
+}  // namespace re::nsyshid
 
 WUMS_EXPORT(WUMS_FUNCTION_EXPORT, HIDSetup, re::nsyshid::Setup);
 WUMS_EXPORT(WUMS_FUNCTION_EXPORT, HIDTeardown, re::nsyshid::Teardown);

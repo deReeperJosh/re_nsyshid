@@ -1,66 +1,96 @@
+---
+# Global config for all languages
+AccessModifierOffset: -2
 AlignAfterOpenBracket: Align
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
 AlignEscapedNewlinesLeft: false
-AlignOperands: true
+AlignOperands:   true
 AlignTrailingComments: true
-AllowShortBlocksOnASingleLine: Empty
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
-AllowShortEnumsOnASingleLine: true
-AllowShortFunctionsOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: InlineOnly
 AllowShortIfStatementsOnASingleLine: false
-AllowShortLambdasOnASingleLine: Inline
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: true
 BinPackArguments: true
 BinPackParameters: true
 BraceWrapping:
-  AfterCaseLabel: true
-  AfterClass: true
-  AfterControlStatement: Always
-  AfterEnum: true
-  AfterExternBlock: true
-  AfterFunction: true
-  AfterNamespace: true
-  AfterStruct: true
-  AfterUnion: true
-  BeforeElse: true
-  BeforeWhile: true
-  SplitEmptyFunction: false
+  AfterCaseLabel:  true
+  AfterClass:      true
+  AfterControlStatement: true
+  AfterEnum:       true
+  AfterFunction:   true
+  AfterNamespace:  true
+  AfterStruct:     true
+  AfterUnion:      true
+  BeforeCatch:     true
+  BeforeElse:      true
+  IndentBraces:    false
+BreakBeforeBinaryOperators: None
 BreakBeforeBraces: Custom
-BreakBeforeTernaryOperators: true
-ColumnLimit: 0
+BreakBeforeTernaryOperators: false
+BreakConstructorInitializersBeforeComma: false
+ColumnLimit:     100
+CommentPragmas:  '^ (IWYU pragma:|NOLINT)'
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
 ConstructorInitializerIndentWidth: 4
 ContinuationIndentWidth: 4
 Cpp11BracedListStyle: true
-IndentWidth: 4
+DerivePointerAlignment: false
+DisableFormat:   false
+ForEachMacros:   []
+IncludeCategories:
+  - Regex:           '^<[Ww]indows\.h>$'
+    Priority:        1
+  - Regex:           '^<'
+    Priority:        2
+  - Regex:           '^"'
+    Priority:        3
+IndentCaseLabels: false
+IndentWidth:     2
+IndentWrappedFunctionNames: false
 KeepEmptyLinesAtTheStartOfBlocks: false
-Language: Cpp
+MacroBlockBegin: ''
+MacroBlockEnd:   ''
 MaxEmptyLinesToKeep: 1
-NamespaceIndentation: All
-ObjCSpaceAfterProperty: false
+NamespaceIndentation: None
+PenaltyBreakBeforeFirstCallParameter: 19
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakString: 1000
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 60
 PointerAlignment: Left
-ReflowComments: true
-SortIncludes: false
-SortUsingDeclarations: true
+ReflowComments:  true
+SortIncludes:    true
 SpaceAfterCStyleCast: false
-SpaceBeforeCtorInitializerColon: true
-SpaceAfterLogicalNot: false
-SpaceAfterTemplateKeyword: false
 SpaceBeforeAssignmentOperators: true
-SpaceBeforeCaseColon: false
 SpaceBeforeParens: ControlStatements
-SpaceBeforeRangeBasedForLoopColon: true
-SpaceBeforeSquareBrackets: false
-SpaceInEmptyBlock: false
 SpaceInEmptyParentheses: false
-SpacesBeforeTrailingComments: 1
-SpacesInAngles: false
-SpacesInCStyleCastParentheses: false
-SpacesInConditionalStatement: false
+SpacesBeforeTrailingComments: 2
+SpacesInAngles:  false
 SpacesInContainerLiterals: true
+SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
-Standard: Latest
-TabWidth: 4
-UseTab: Always
+Standard:        Latest
+TabWidth:        2
+UseTab:          Never
+---
+# C++ Specific Config
+Language:        Cpp
+---
+# Objective-C Specific Config
+Language:        ObjC
+ObjCBlockIndentWidth: 2
+ObjCSpaceAfterProperty: false
+ObjCSpaceBeforeProtocolList: true
+BraceWrapping:
+  AfterObjCDeclaration: true
+...
+
