@@ -16,5 +16,5 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build Project
       run: |
-        docker build . -t re_nsyshid_builder
-        docker run -it --rm -v ${PWD}:/project re_nsyshid_builder make
+        docker build -t re_nsyshid_builder .
+        docker run --rm -v ${PWD}:/project re_nsyshid_builder make
