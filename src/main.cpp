@@ -1,11 +1,11 @@
 #include <coreinit/debug.h>
 #include <wums.h>
 
-WUMS_MODULE_EXPORT_NAME("homebrew_examplemodule");
-WUMS_MODULE_AUTHOR("Maschell");
+WUMS_MODULE_EXPORT_NAME("nsyshid");
+WUMS_MODULE_AUTHOR("deReeperJosh");
 WUMS_MODULE_VERSION("0.1");
 WUMS_MODULE_LICENSE("GPL");
-WUMS_MODULE_DESCRIPTION("Just an example module");
+WUMS_MODULE_DESCRIPTION("A nsyshid reimplementation with support for HID Device Emulation");
 
 /**
  * If this modules depends on another module (e.g. the FunctionPatcherModule) you can add a dependency to that module.

@@ -19,11 +19,11 @@ WUT_ROOT := $(DEVKITPRO)/wut
 # DATA is a list of directories containing data files
 # INCLUDES is a list of directories containing header files
 #-------------------------------------------------------------------------------
-TARGET		:=	ExampleModule
+TARGET		:=	re_nsyshid
 BUILD		:=	build
-SOURCES		:=	source
+SOURCES		:=	src
 DATA		:=	data
-INCLUDES	:=	source
+INCLUDES	:=	src
 
 #-------------------------------------------------------------------------------
 # options for code generation

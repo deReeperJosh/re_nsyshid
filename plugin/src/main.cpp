@@ -18,11 +18,11 @@
     Mandatory plugin information.
     If not set correctly, the loader will refuse to use the plugin.
 **/
-WUPS_PLUGIN_NAME("Example plugin C++");
-WUPS_PLUGIN_DESCRIPTION("This is just an example plugin written in C++");
-WUPS_PLUGIN_VERSION("v1.0");
-WUPS_PLUGIN_AUTHOR("Maschell");
-WUPS_PLUGIN_LICENSE("BSD");
+WUPS_PLUGIN_NAME("re_nsyshid");
+WUPS_PLUGIN_DESCRIPTION("A nsyshid reimplementation with support for Amiibo emulation");
+WUPS_PLUGIN_VERSION("0.1");
+WUPS_PLUGIN_AUTHOR("deReeperJosh");
+WUPS_PLUGIN_LICENSE("GPL");
 
 #define LOG_FS_OPEN_CONFIG_ID             "logFSOpen"
 #define BUTTON_COMBO_PRESS_DOWN_CONFIG_ID "pressDownItem"
@@ -39,7 +39,7 @@ WUPS_PLUGIN_LICENSE("BSD");
 **/
 
 WUPS_USE_WUT_DEVOPTAB();                // Use the wut devoptabs
-WUPS_USE_STORAGE("example_plugin_cpp"); // Unique id for the storage api
+WUPS_USE_STORAGE("re_nsyshid"); // Unique id for the storage api
 
 enum ExampleOptions {
     EXAMPLE_OPTION_1 = 0,
