@@ -1,0 +1,20 @@
+:NAME nsyshid
+
+:TEXT
+// custom added exports
+
+// nsyshid exports
+HIDSetup
+HIDTeardown
+HIDAddClient
+HIDDelClient
+HIDGetDescriptor
+HIDSetDescriptor
+HIDGetReport
+HIDSetReport
+HIDGetIdle
+HIDSetIdle
+HIDGetProtocol
+HIDSetProtocol
+HIDRead
+HIDWrite
