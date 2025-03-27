@@ -4,3 +4,4 @@ build
 *.rpx
 *.wps
 *.wms
+.vscode
