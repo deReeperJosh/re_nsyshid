@@ -3,6 +3,8 @@
 :TEXT
 // custom added exports
 
+rensyshidExampleMethod
+
 // nsyshid exports
 HIDSetup
 HIDTeardown

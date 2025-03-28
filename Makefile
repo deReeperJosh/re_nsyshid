@@ -23,7 +23,7 @@ TARGET		:=	re_nsyshid
 BUILD		:=	build
 SOURCES		:=	src src/re_nsyshid src/utils
 DATA		:=	data
-INCLUDES	:=	src
+INCLUDES	:=	src include
 
 #-------------------------------------------------------------------------------
 # options for code generation
@@ -36,11 +36,16 @@ CFLAGS	+=	$(INCLUDE) -D__WIIU__ -D__WUT__
 CXXFLAGS	:= $(CFLAGS) -std=c++17 
 
 ASFLAGS	:=	-g $(ARCH)
-LDFLAGS	=	-g $(ARCH) $(RPXSPECS) -Wl,-Map,$(notdir $*.map) $(WUMSSPECS) 
+LDFLAGS	=	-g $(ARCH) $(RPXSPECS) -Wl,-Map,$(notdir $*.map) $(WUMSSPECS)
 
 ifeq ($(DEBUG),1)
 CXXFLAGS += -DDEBUG -g
 CFLAGS += -DDEBUG -g
+endif
+
+ifeq ($(DEBUG),VERBOSE)
+CXXFLAGS += -DDEBUG -DVERBOSE_DEBUG -g
+CFLAGS += -DDEBUG -DVERBOSE_DEBUG -g
 endif
 
 LIBS	:= -lwums -lwut

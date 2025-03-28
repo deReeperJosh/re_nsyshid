@@ -2,6 +2,9 @@
 #include <wums.h>
 #include "utils/logger.h"
 
+#include "re_nsyshid/re_nsyshid.hpp"
+#include "re_nsyshid.h"
+
 WUMS_MODULE_EXPORT_NAME("nsyshid");
 WUMS_MODULE_AUTHOR("deReeperJosh");
 WUMS_MODULE_VERSION("0.1");
@@ -18,37 +21,27 @@ WUMS_MODULE_DESCRIPTION("A nsyshid reimplementation with support for HID Device 
 
 WUMS_INITIALIZE(/*wums_app_init_args_t*/ args)
 {
-  /* Called once when the module has been loaded */
-
-  // Information about the module can be get via the (optional) argument
-  module_information_t* module_information = args.module_information;
-
-  if (module_information == nullptr)
-  {
-    OSFatal("Failed to get module_information pointer.");
-  }
-  // Make sure the module is using a compatible version with the loader
-  if (module_information->version != MODULE_INFORMATION_VERSION)
-  {
-    OSFatal("The module information struct version does not match.");
-  }
   initLogging();
+  DEBUG_FUNCTION_LINE("WUMS_INITIALIZE of re_nsyshid!");
 }
 
 WUMS_APPLICATION_STARTS()
 {
   /* Called whenever a new application has been started */
   initLogging();
+  DEBUG_FUNCTION_LINE("WUMS_APPLICATION_STARTS of re_nsyshid!");
 }
 
 WUMS_APPLICATION_REQUESTS_EXIT()
 {
   /* Called whenever a application wants to exit */
+  DEBUG_FUNCTION_LINE("WUMS_APPLICATION_REQUESTS_EXIT of re_nsyshid!");
 }
 
 WUMS_APPLICATION_ENDS()
 {
   /* Called whenever a application actually ends */
+  DEBUG_FUNCTION_LINE("WUMS_APPLICATION_ENDS of re_nsyshid!");
   deinitLogging();
 }
 
@@ -56,3 +49,10 @@ WUMS_RELOCATIONS_DONE()
 {
   /* Called whenever the relocations have been updated, but before WUMS_APPLICATION_STARTS() */
 }
+
+void rensyshidExampleMethod(void)
+{
+    DEBUG_FUNCTION_LINE("example method called");
+}
+
+WUMS_EXPORT_FUNCTION(rensyshidExampleMethod);

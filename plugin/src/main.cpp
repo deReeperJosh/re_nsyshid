@@ -9,6 +9,7 @@
 #include <wups/config/WUPSConfigItemStub.h>
 #include <wups/config_api.h>
 #include "utils/logger.h"
+#include "re_nsyshid.h"
 
 #include <forward_list>
 
@@ -86,6 +87,9 @@ void boolItemChanged(ConfigItemBoolean* item, bool newValue)
   {
     DEBUG_FUNCTION_LINE_ERR("Other2 bool value has changed to %d", newValue);
   }
+  DEBUG_FUNCTION_LINE_INFO("calling rensyshid method");
+  rensyshidExampleMethod();
+  DEBUG_FUNCTION_LINE_INFO("called rensyshid method");
 }
 
 void integerRangeItemChanged(ConfigItemIntegerRange* item, int newValue)
@@ -243,9 +247,9 @@ INITIALIZE_PLUGIN()
 {
   // Logging only works when compiled with `make DEBUG=1`. See the README for more information.
   initLogging();
-  DEBUG_FUNCTION_LINE("INITIALIZE_PLUGIN of example_plugin!");
+  DEBUG_FUNCTION_LINE("INITIALIZE_PLUGIN of re_nsyshid!");
 
-  WUPSConfigAPIOptionsV1 configOptions = {.name = "example_plugin_cpp"};
+  WUPSConfigAPIOptionsV1 configOptions = {.name = "re_nsyshid"};
   if (WUPSConfigAPI_Init(configOptions, ConfigMenuOpenedCallback, ConfigMenuClosedCallback) !=
       WUPSCONFIG_API_RESULT_SUCCESS)
   {
@@ -473,7 +477,7 @@ DEINITIALIZE_PLUGIN()
 {
   // Remove all button combos from this plugin.
   sButtonComboInstances.clear();
-  DEBUG_FUNCTION_LINE("DEINITIALIZE_PLUGIN of example_plugin!");
+  DEBUG_FUNCTION_LINE("DEINITIALIZE_PLUGIN of re_nsyshid!");
 }
 
 /**
@@ -483,7 +487,7 @@ ON_APPLICATION_START()
 {
   initLogging();
 
-  DEBUG_FUNCTION_LINE("ON_APPLICATION_START of example_plugin!");
+  DEBUG_FUNCTION_LINE("ON_APPLICATION_START of re_nsyshid!");
 }
 
 /**
@@ -499,7 +503,7 @@ ON_APPLICATION_ENDS()
 **/
 ON_APPLICATION_REQUESTS_EXIT()
 {
-  DEBUG_FUNCTION_LINE_INFO("ON_APPLICATION_REQUESTS_EXIT of example_plugin!");
+  DEBUG_FUNCTION_LINE_INFO("ON_APPLICATION_REQUESTS_EXIT of re_nsyshid!");
 }
 
 /**
