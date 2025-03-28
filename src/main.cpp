@@ -3,7 +3,10 @@
 #include "utils/logger.h"
 
 #include "re_nsyshid/re_nsyshid.hpp"
+#include "re_nsyshid/USBDeviceManager.hpp"
 #include "re_nsyshid.h"
+
+#include "utils/LogHandler.hpp"
 
 WUMS_MODULE_EXPORT_NAME("nsyshid");
 WUMS_MODULE_AUTHOR("deReeperJosh");
@@ -50,9 +53,16 @@ WUMS_RELOCATIONS_DONE()
   /* Called whenever the relocations have been updated, but before WUMS_APPLICATION_STARTS() */
 }
 
-void rensyshidExampleMethod(void)
+rensyshidEmulationState rensyshidGetEmulationState(void)
 {
-    DEBUG_FUNCTION_LINE("example method called");
+    return re::nsyshid::usbDeviceManager.GetEmulationState();
 }
 
-WUMS_EXPORT_FUNCTION(rensyshidExampleMethod);
+void rensyshidSetEmulationState(rensyshidEmulationState state)
+{
+    LogHandler::Info("Module: Updated emulation state to: %d", state);
+    re::nsyshid::usbDeviceManager.SetEmulationState(state);
+}
+
+WUMS_EXPORT_FUNCTION(rensyshidGetEmulationState);
+WUMS_EXPORT_FUNCTION(rensyshidSetEmulationState);

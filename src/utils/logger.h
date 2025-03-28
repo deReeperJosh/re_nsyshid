@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-#define LOG_APP_TYPE "P"
+#define LOG_APP_TYPE "M"
 #define LOG_APP_NAME "re_nsyshid"
 
 #define __FILENAME__                                                                               \

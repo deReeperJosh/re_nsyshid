@@ -3,7 +3,9 @@
 :TEXT
 // custom added exports
 
-rensyshidExampleMethod
+rensyshidGetEmulationState
+rensyshidSetEmulationState
+rensyshidSetLogHandler
 
 // nsyshid exports
 HIDSetup

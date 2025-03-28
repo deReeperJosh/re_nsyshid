@@ -5,12 +5,24 @@
 extern "C" {
 #endif
 
-typedef enum rensyshidEmulationStatie {
+typedef enum rensyshidEmulationState {
     NSYSHID_EMULATION_OFF,
     NSYSHID_EMULATION_ON
 } EmulationState;
 
-void rensyshidExampleMethod(void);
+typedef enum rensyshidLogVerbosity {
+    NSYSHID_LOG_VERBOSITY_INFO,
+    NSYSHID_LOG_VERBOSITY_WARN,
+    NSYSHID_LOG_VERBOSITY_ERROR,
+} rensyshidLogVerbosity;
+
+typedef void (*renyshsidLogHandler)(rensyshidLogVerbosity verb, const char* message);
+
+rensyshidEmulationState rensyshidGetEmulationState(void);
+
+void rensyshidSetEmulationState(rensyshidEmulationState state);
+
+void rensyshidSetLogHandler(renyshsidLogHandler handler);
 
 #ifdef __cplusplus
 }
