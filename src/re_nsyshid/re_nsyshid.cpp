@@ -53,7 +53,12 @@ int32_t GetDescriptor(uint32_t handle, uint8_t descriptorType, uint8_t descripto
 {
   // TO DO
   DEBUG_FUNCTION_LINE("nsyshid:HIDGetDescriptor Called");
-  LogHandler::Info("nsyshid:HIDGetDescriptor Called");
+  LogHandler::Info("nsyshid:HIDGetDescriptor Called %d %d %d %d", handle, descriptorType,
+                   descriptorIndex, languageId);
+  if (callback)
+  {
+    callback(handle, 0, buffer, bufferLength, userContext);
+  }
   return 0;
 }
 
@@ -63,7 +68,12 @@ int32_t SetDescriptor(uint32_t handle, uint8_t descriptorType, uint8_t descripto
 {
   // TO DO
   DEBUG_FUNCTION_LINE("nsyshid:HIDSetDescriptor Called");
-  LogHandler::Info("nsyshid:HIDSetDescriptor Called");
+  LogHandler::Info("nsyshid:HIDSetDescriptor Called %d %d %d %d", handle, descriptorType,
+                   descriptorIndex, languageId);
+  if (callback)
+  {
+    callback(handle, 0, buffer, bufferLength, userContext);
+  }
   return 0;
 }
 
@@ -72,7 +82,11 @@ int32_t GetReport(uint32_t handle, uint8_t reportType, uint8_t reportId, uint8_t
 {
   // TO DO
   DEBUG_FUNCTION_LINE("nsyshid:HIDGetReport Called");
-  LogHandler::Info("nsyshid:HIDGetReport Called");
+  LogHandler::Info("nsyshid:HIDGetReport Called %d %d %d", handle, reportType, reportId);
+  if (callback)
+  {
+    callback(handle, 0, buffer, bufferLength, userContext);
+  }
   return 0;
 }
 
@@ -81,7 +95,11 @@ int32_t SetReport(uint32_t handle, uint8_t reportType, uint8_t reportId, uint8_t
 {
   // TO DO
   DEBUG_FUNCTION_LINE("nsyshid:HIDSetReport Called");
-  LogHandler::Info("nsyshid:HIDSetReport Called");
+  LogHandler::Info("nsyshid:HIDSetReport Called %d %d %d", handle, reportType, reportId);
+  if (callback)
+  {
+    callback(handle, 0, buffer, bufferLength, userContext);
+  }
   return 0;
 }
 
@@ -90,7 +108,11 @@ int32_t GetIdle(uint32_t handle, uint8_t interfaceIndex, uint8_t reportId, uint8
 {
   // TO DO
   DEBUG_FUNCTION_LINE("nsyshid:HIDGetIdle Called");
-  LogHandler::Info("nsyshid:HIDGetIdle Called");
+  LogHandler::Info("nsyshid:HIDGetIdle Called %d %d %d", handle, interfaceIndex, reportId);
+  if (callback)
+  {
+    callback(handle, 0, duration, 1, userContext);
+  }
   return 0;
 }
 
@@ -99,7 +121,11 @@ int32_t SetIdle(uint32_t handle, uint8_t interfaceIndex, uint8_t reportId, uint8
 {
   // TO DO
   DEBUG_FUNCTION_LINE("nsyshid:HIDSetIdle Called");
-  LogHandler::Info("nsyshid:HIDSetIdle Called");
+  LogHandler::Info("nsyshid:HIDSetIdle Called %d %d %d %d", handle, interfaceIndex, reportId, duration);
+  if (callback)
+  {
+    callback(handle, 0, nullptr, 0, userContext);
+  }
   return 0;
 }
 
@@ -108,7 +134,11 @@ int32_t GetProtocol(uint32_t handle, uint8_t interfaceIndex, uint8_t* protocol,
 {
   // TO DO
   DEBUG_FUNCTION_LINE("nsyshid:HIDGetProtocol Called");
-  LogHandler::Info("nsyshid:HIDGetProtocol Called");
+  LogHandler::Info("nsyshid:HIDGetProtocol Called %d %d", handle, interfaceIndex);
+  if (callback)
+  {
+    callback(handle, 0, protocol, 1, userContext);
+  }
   return 0;
 }
 
@@ -117,7 +147,11 @@ int32_t SetProtocol(uint32_t handle, uint8_t interfaceIndex, uint8_t protocol, H
 {
   // TO DO
   DEBUG_FUNCTION_LINE("nsyshid:HIDSetProtocol Called");
-  LogHandler::Info("nsyshid:HIDSetProtocol Called");
+  LogHandler::Info("nsyshid:HIDSetProtocol Called %d %d %d", handle, interfaceIndex, protocol);
+  if (callback)
+  {
+    callback(handle, 0, nullptr, 0, userContext);
+  }
   return 0;
 }
 
@@ -126,16 +160,24 @@ int32_t Read(uint32_t handle, uint8_t* buffer, uint32_t bufferLength, HIDCallbac
 {
   // TO DO
   DEBUG_FUNCTION_LINE("nsyshid:HIDRead Called");
-  LogHandler::Info("nsyshid:HIDRead Called");
+  LogHandler::Info("nsyshid:HIDRead Called %d %d", handle, bufferLength);
+  if (callback)
+  {
+    callback(handle, 0, buffer, bufferLength, userContext);
+  }
   return 0;
 }
 
-int32_t Write(uint32_t handle, uint8_t* buffer, uint32_t bufferLength, HIDCallback hc,
+int32_t Write(uint32_t handle, uint8_t* buffer, uint32_t bufferLength, HIDCallback callback,
               void* userContext)
 {
   // TO DO
   DEBUG_FUNCTION_LINE("nsyshid:HIDWrite Called");
-  LogHandler::Info("nsyshid:HIDWrite Called");
+  LogHandler::Info("nsyshid:HIDWrite Called %d %d", handle, bufferLength);
+  if (callback)
+  {
+    callback(handle, 0, buffer, bufferLength, userContext);
+  }
   return 0;
 }
 }  // namespace re::nsyshid
