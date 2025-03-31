@@ -12,7 +12,7 @@ The re_nsyshid plugin allows you to toggle the "Emulation Status" on and off - m
 
 ## Usage
 
-- Download the [latest release](https://github.com/deReeperJosh/re_nsyshidV2/releases) or the artifacts of latest nightly build from [here](https://nightly.link/deReeperJosh/re_nsyshidV2/workflows/build/main/re_nsyshid.zip).
+- Download the [latest release](https://github.com/deReeperJosh/re_nsyshid/releases) or the artifacts of latest nightly build from [here](https://nightly.link/deReeperJosh/re_nsyshid/workflows/build/main/re_nsyshid.zip).
 - Copy the contents of the downloaded *`.zip`* file to your target environment.
 - Copy your NFC Figure dumps to `wiiu/re_nsyshid`. Subfolders are also supported and can be browsed from the configuration menu.
 - Open the plugin configuration menu with L + Down + SELECT.
