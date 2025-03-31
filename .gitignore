@@ -1,0 +1,7 @@
+.DS_Store
+build
+*.elf
+*.rpx
+*.wps
+*.wms
+.vscode
