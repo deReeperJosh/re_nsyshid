@@ -163,6 +163,7 @@ WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle ro
         constexpr WUPSConfigItemMultipleValues::ValuePair deviceToEmulateValues[] = {
                 {NONE, "No Device Connected"},
                 {SKYLANDER, "Emulate Skylander Portal"},
+                {INFINITY, "Emulate Infinity Base"},
         };
 
         root.add(WUPSConfigItemMultipleValues::CreateFromValue(EMULATED_DEVICE_CONFIG_ID, "Device to Emulate",
