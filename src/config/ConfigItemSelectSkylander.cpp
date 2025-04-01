@@ -1,3 +1,7 @@
+/*
+* Code repurposed from re_nfpii
+*/
+
 #include "ConfigItemSelectSkylander.hpp"
 #include "devices/Skylander.h"
 #include "utils/DrawUtils.hpp"

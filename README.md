@@ -8,6 +8,8 @@ Requires the [Aroma](https://github.com/wiiu-env/Aroma) environment.
 
 The re_nsyshid plugin allows you to toggle the "Emulation Status" on and off - meaning that you can choose to either use your physical USB devices when the Emulation Status is disabled, or when enabled it will send commands to the device you have selected in the plugin config menu.
 
+Includes some code repurposed from the [re_nfpii](https://github.com/GaryOderNichts/re_nfpii) plugin, big thank you to [GaryOderNichts](https://github.com/GaryOderNichts) for this!
+
 > :warning: It is highly recommended to set your chosen Emulation Status and chosen Emulated Device prior to opening your game, as unexpected errors may occur when trying to toggle this in game.
 
 ## Usage

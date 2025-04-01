@@ -1,3 +1,7 @@
+/*
+* Code repurposed from re_nfpii
+*/
+
 #include "input.h"
 
 uint32_t remapWiiMoteButtons(uint32_t buttons) {

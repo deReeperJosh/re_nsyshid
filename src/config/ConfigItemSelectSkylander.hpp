@@ -1,3 +1,7 @@
+/*
+* Code repurposed from re_nfpii
+*/
+
 #include <wups.h>
 
 #include <vector>

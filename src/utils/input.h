@@ -1,3 +1,7 @@
+/*
+* Code repurposed from re_nfpii
+*/
+
 #pragma once
 
 #include <padscore/kpad.h>
