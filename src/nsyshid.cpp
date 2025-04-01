@@ -96,7 +96,7 @@ HIDDevice *GetFreeHID() {
 }
 
 std::shared_ptr<Device> GetDeviceByHandle(uint32_t handle) {
-    if (m_device->m_hid->handle == handle) {
+    if (m_device && m_device->m_hid->handle == handle) {
         return m_device;
     }
     return nullptr;
@@ -137,7 +137,7 @@ DECL_FUNCTION(int32_t, HIDAddClient, HIDClient *client, HIDAttachCallback attach
     clientMutex.unlock();
 
     DeviceToEmulate deviceToEmulate;
-    WUPSStorageAPI::Get(std::string_view(EMULATION_STATUS_CONFIG_ID), deviceToEmulate);
+    WUPSStorageAPI::Get(std::string_view(EMULATED_DEVICE_CONFIG_ID), deviceToEmulate);
 
     if (!m_device ||
         (deviceToEmulate == DeviceToEmulate::SKYLANDER && (m_device->m_productId != 0x3014 && m_device->m_productId != 0x5001)) ||
@@ -153,7 +153,7 @@ DECL_FUNCTION(int32_t, HIDAddClient, HIDClient *client, HIDAttachCallback attach
             devicePtr->handle = GenerateHIDHandle();
             skylanderDevice->AssignHID(devicePtr);
             deviceMutex.lock();
-            m_device = std::move(skylanderDevice);
+            m_device = skylanderDevice;
             deviceMutex.unlock();
         } else if (deviceToEmulate == DeviceToEmulate::INFINITY) {
             DEBUG_FUNCTION_LINE_INFO("adding emulated infinity base");
@@ -166,7 +166,7 @@ DECL_FUNCTION(int32_t, HIDAddClient, HIDClient *client, HIDAttachCallback attach
             devicePtr->handle = GenerateHIDHandle();
             infinityDevice->AssignHID(devicePtr);
             deviceMutex.lock();
-            m_device = std::move(infinityDevice);
+            m_device = infinityDevice;
             deviceMutex.unlock();
         }
     }
@@ -181,7 +181,9 @@ DECL_FUNCTION(int32_t, HIDDelClient, HIDClient *client) {
     if (status == DISABLED) {
         return real_HIDDelClient(client);
     }
-    client->attachCallback(client, m_device->m_hid, HID_DEVICE_DETACH);
+    if (m_device) {
+        client->attachCallback(client, m_device->m_hid, HID_DEVICE_DETACH);
+    }
 
     clientMutex.lock();
     clients.remove(client);
@@ -535,15 +537,17 @@ void FireAttachCallbacks() {
     if (status == ENABLED) {
         deviceMutex.lock();
         clientMutex.lock();
-        for (const auto &client : clients) {
-            bool claimedDevice = false;
-            if (!claimedDevice && client->attachCallback) {
-                int32_t result = client->attachCallback(client, m_device->m_hid, HID_DEVICE_ATTACH);
-                if (result == 1) {
-                    claimedDevice = true;
-                    DEBUG_FUNCTION_LINE_INFO("Client wants device handle: %d inst: %d vid: %x pid: %x interface: %d subclass: %d protocol: %d rx: %d tx: %d", m_device->m_hid->handle, m_device->m_hid->physicalDeviceInst, m_device->m_hid->vid, m_device->m_hid->pid, m_device->m_hid->interfaceIndex, m_device->m_hid->subClass, m_device->m_hid->protocol, m_device->m_hid->maxPacketSizeRx, m_device->m_hid->maxPacketSizeTx);
-                } else {
-                    DEBUG_FUNCTION_LINE_INFO("Client doesn't want device handle: %d inst: %d vid: %x pid: %x interface: %d subclass: %d protocol: %d rx: %d tx: %d", m_device->m_hid->handle, m_device->m_hid->physicalDeviceInst, m_device->m_hid->vid, m_device->m_hid->pid, m_device->m_hid->interfaceIndex, m_device->m_hid->subClass, m_device->m_hid->protocol, m_device->m_hid->maxPacketSizeRx, m_device->m_hid->maxPacketSizeTx);
+        if (m_device) {
+            for (const auto &client : clients) {
+                bool claimedDevice = false;
+                if (!claimedDevice && client->attachCallback) {
+                    int32_t result = client->attachCallback(client, m_device->m_hid, HID_DEVICE_ATTACH);
+                    if (result == 1) {
+                        claimedDevice = true;
+                        DEBUG_FUNCTION_LINE_INFO("Client wants device handle: %d inst: %d vid: %x pid: %x interface: %d subclass: %d protocol: %d rx: %d tx: %d", m_device->m_hid->handle, m_device->m_hid->physicalDeviceInst, m_device->m_hid->vid, m_device->m_hid->pid, m_device->m_hid->interfaceIndex, m_device->m_hid->subClass, m_device->m_hid->protocol, m_device->m_hid->maxPacketSizeRx, m_device->m_hid->maxPacketSizeTx);
+                    } else {
+                        DEBUG_FUNCTION_LINE_INFO("Client doesn't want device handle: %d inst: %d vid: %x pid: %x interface: %d subclass: %d protocol: %d rx: %d tx: %d", m_device->m_hid->handle, m_device->m_hid->physicalDeviceInst, m_device->m_hid->vid, m_device->m_hid->pid, m_device->m_hid->interfaceIndex, m_device->m_hid->subClass, m_device->m_hid->protocol, m_device->m_hid->maxPacketSizeRx, m_device->m_hid->maxPacketSizeTx);
+                    }
                 }
             }
         }
@@ -559,10 +563,12 @@ void FireDetachCallbacks() {
     if (status == ENABLED) {
         deviceMutex.lock();
         clientMutex.lock();
-        for (const auto &client : clients) {
-            if (client->attachCallback) {
-                DEBUG_FUNCTION_LINE_INFO("detaching device handle: %d inst: %d vid: %x pid: %x interface: %d subclass: %d protocol: %d rx: %d tx: %d", m_device->m_hid->handle, m_device->m_hid->physicalDeviceInst, m_device->m_hid->vid, m_device->m_hid->pid, m_device->m_hid->interfaceIndex, m_device->m_hid->subClass, m_device->m_hid->protocol, m_device->m_hid->maxPacketSizeRx, m_device->m_hid->maxPacketSizeTx);
-                client->attachCallback(client, m_device->m_hid, HID_DEVICE_DETACH);
+        if (m_device) {
+            for (const auto &client : clients) {
+                if (client->attachCallback) {
+                    DEBUG_FUNCTION_LINE_INFO("detaching device handle: %d inst: %d vid: %x pid: %x interface: %d subclass: %d protocol: %d rx: %d tx: %d", m_device->m_hid->handle, m_device->m_hid->physicalDeviceInst, m_device->m_hid->vid, m_device->m_hid->pid, m_device->m_hid->interfaceIndex, m_device->m_hid->subClass, m_device->m_hid->protocol, m_device->m_hid->maxPacketSizeRx, m_device->m_hid->maxPacketSizeTx);
+                    client->attachCallback(client, m_device->m_hid, HID_DEVICE_DETACH);
+                }
             }
         }
 
@@ -573,7 +579,8 @@ void FireDetachCallbacks() {
 
 void ResetClientLibrary() {
     clients.clear();
-    m_device->AssignHID(m_device->m_hid);
+    if (m_device)
+        m_device->AssignHID(m_device->m_hid);
 }
 
 WUPS_MUST_REPLACE(HIDSetup, WUPS_LOADER_LIBRARY_NSYSHID, HIDSetup);
