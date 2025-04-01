@@ -142,7 +142,7 @@ WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle ro
             DEBUG_FUNCTION_LINE_ERR("GetOrStoreDefault failed: %s (%d)",
                                     WUPSStorageAPI_GetStatusStr(storageRes), storageRes);
         }
-        if ((storageRes = WUPSStorageAPI::GetOrStoreDefault(EMULATION_STATUS_CONFIG_ID, deviceToEmulate,
+        if ((storageRes = WUPSStorageAPI::GetOrStoreDefault(EMULATED_DEVICE_CONFIG_ID, deviceToEmulate,
                                                             NONE)) != WUPS_STORAGE_ERROR_SUCCESS) {
             DEBUG_FUNCTION_LINE_ERR("GetOrStoreDefault failed: %s (%d)",
                                     WUPSStorageAPI_GetStatusStr(storageRes), storageRes);
