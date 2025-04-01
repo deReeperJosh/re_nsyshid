@@ -58,7 +58,7 @@ constexpr uint16_t INF_FIGURE_SIZE = INF_BLOCK_COUNT * INF_BLOCK_SIZE;
 constexpr uint8_t MAX_FIGURES      = 9;
 
 class InfinityBase {
-
+public:
     struct InfinityFigure final {
         FILE *infFile;
         std::array<uint8_t, INF_FIGURE_SIZE> data{};

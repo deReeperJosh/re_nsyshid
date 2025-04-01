@@ -193,7 +193,9 @@ DECL_FUNCTION(int32_t, HIDDelClient, HIDClient *client) {
 }
 
 void DoHIDCallback(HIDCallback callback, uint32_t handle, void *userContext, uint32_t errorCode, uint32_t responseCode, uint8_t *buffer) {
-    callback(handle, errorCode, buffer, responseCode, userContext);
+    if (!clients.empty()) {
+        callback(handle, errorCode, buffer, responseCode, userContext);
+    }
 }
 
 void GetDescriptorAsync(std::shared_ptr<Device> device, uint8_t descType, uint8_t descIndex, uint16_t lang,

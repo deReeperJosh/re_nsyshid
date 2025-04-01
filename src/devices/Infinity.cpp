@@ -450,11 +450,14 @@ bool InfinityUSBDevice::SetProtocol(uint8_t ifIndex,
 
 bool InfinityUSBDevice::Read(uint8_t *buffer,
                              uint32_t bufferLength) {
+    memcpy(buffer, g_infinitybase.GetStatus().data(), bufferLength);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     return true;
 }
 
 bool InfinityUSBDevice::Write(uint8_t *buffer,
                               uint32_t bufferLength) {
+    g_infinitybase.SendCommand(buffer, bufferLength);
     return true;
 }
 
@@ -673,8 +676,8 @@ bool InfinityBase::RemoveFigure(uint8_t position) {
         }
 
         std::array<uint8_t, 32> figureChangeResponse = {0xab, 0x04, position, 0x09, figure.orderAdded,
-                                                      0x01};
-        figureChangeResponse[6]                    = GenerateChecksum(figureChangeResponse, 6);
+                                                        0x01};
+        figureChangeResponse[6]                      = GenerateChecksum(figureChangeResponse, 6);
         m_figureAddedRemovedResponses.push(figureChangeResponse);
 
         return true;
