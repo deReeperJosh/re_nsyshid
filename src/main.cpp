@@ -17,7 +17,7 @@
 
 #include <malloc.h>
 
-#define STR_VALUE(arg) #arg
+#define STR_VALUE(arg)          #arg
 #define VERSION_STRING(x, y, z) "v" STR_VALUE(x) "." STR_VALUE(y) "." STR_VALUE(z)
 
 /**
@@ -134,9 +134,23 @@ WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle ro
         };
 
         EmulationStatus status;
-        WUPSStorageAPI::Get(std::string_view(EMULATION_STATUS_CONFIG_ID), status);
         DeviceToEmulate deviceToEmulate;
-        WUPSStorageAPI::Get(std::string_view(EMULATION_STATUS_CONFIG_ID), deviceToEmulate);
+
+        WUPSStorageError storageRes;
+        if ((storageRes = WUPSStorageAPI::GetOrStoreDefault(EMULATION_STATUS_CONFIG_ID, status,
+                                                            DISABLED)) != WUPS_STORAGE_ERROR_SUCCESS) {
+            DEBUG_FUNCTION_LINE_ERR("GetOrStoreDefault failed: %s (%d)",
+                                    WUPSStorageAPI_GetStatusStr(storageRes), storageRes);
+        }
+        if ((storageRes = WUPSStorageAPI::GetOrStoreDefault(EMULATION_STATUS_CONFIG_ID, deviceToEmulate,
+                                                            NONE)) != WUPS_STORAGE_ERROR_SUCCESS) {
+            DEBUG_FUNCTION_LINE_ERR("GetOrStoreDefault failed: %s (%d)",
+                                    WUPSStorageAPI_GetStatusStr(storageRes), storageRes);
+        }
+        if ((storageRes = WUPSStorageAPI::SaveStorage()) != WUPS_STORAGE_ERROR_SUCCESS) {
+            DEBUG_FUNCTION_LINE_ERR("SaveStorage failed: %s (%d)",
+                                    WUPSStorageAPI_GetStatusStr(storageRes), storageRes);
+        }
 
         // It comes in two variants.
         // - "WUPSConfigItemMultipleValues::CreateFromValue" will take a default and current **value**
@@ -163,11 +177,11 @@ WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle ro
             WUPSStorageError err = WUPSStorageAPI_GetString(nullptr, ("currentPath" + std::to_string(i)).c_str(), currentPath, 1024, nullptr);
             DEBUG_FUNCTION_LINE_VERBOSE("Adding skylander config: %d", i);
             if (err == WUPS_STORAGE_ERROR_SUCCESS) {
-                if (!ConfigItemSelectSkylander_AddToCategory(skylanderCategory.getHandle(), ("select_skylander" + std::to_string(i)).c_str(), ("Select Skylander " + std::to_string(i+1)).c_str(), i, TAG_EMULATION_PATH.c_str(), currentPath, skylanderSelectedCallback)) {
+                if (!ConfigItemSelectSkylander_AddToCategory(skylanderCategory.getHandle(), ("select_skylander" + std::to_string(i)).c_str(), ("Select Skylander " + std::to_string(i + 1)).c_str(), i, TAG_EMULATION_PATH.c_str(), currentPath, skylanderSelectedCallback)) {
                     return WUPSCONFIG_API_CALLBACK_RESULT_ERROR;
                 }
             } else {
-                if (!ConfigItemSelectSkylander_AddToCategory(skylanderCategory.getHandle(), ("select_skylander" + std::to_string(i)).c_str(), ("Select Skylander " + std::to_string(i+1)).c_str(), i, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), skylanderSelectedCallback)) {
+                if (!ConfigItemSelectSkylander_AddToCategory(skylanderCategory.getHandle(), ("select_skylander" + std::to_string(i)).c_str(), ("Select Skylander " + std::to_string(i + 1)).c_str(), i, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), skylanderSelectedCallback)) {
                     return WUPSCONFIG_API_CALLBACK_RESULT_ERROR;
                 }
             }
