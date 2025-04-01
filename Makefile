@@ -17,7 +17,7 @@ WUT_ROOT := $(DEVKITPRO)/wut
 #-------------------------------------------------------------------------------
 export VERSION_MAJOR	:=	0
 export VERSION_MINOR	:=	1
-export VERSION_PATCH	:=	0
+export VERSION_PATCH	:=	1
 
 #-------------------------------------------------------------------------------
 # TARGET is the name of the output
