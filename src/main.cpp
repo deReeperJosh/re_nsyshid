@@ -10,6 +10,7 @@
 #include <wups/config/WUPSConfigItemStub.h>
 #include <wups/config_api.h>
 
+#include "config/ConfigItemSelectInfinity.hpp"
 #include "config/ConfigItemSelectSkylander.hpp"
 #include "re_nsyshid.h"
 
@@ -116,8 +117,12 @@ void buttonComboItemChanged(ConfigItemButtonCombo *item, uint32_t newValue) {
 
 static void skylanderSelectedCallback(ConfigItemSelectSkylander *skylanders, const char *filePath, uint8_t slot) {
     DEBUG_FUNCTION_LINE_INFO("New skylander selected: %d for %s", slot, filePath);
-    WUPSStorageAPI_StoreString(nullptr, ("currentPath" + std::to_string(slot)).c_str(), filePath);
-    //NfpiiSetTagEmulationPath(filePath);
+    WUPSStorageAPI_StoreString(nullptr, ("currentSkylanderPath" + std::to_string(slot)).c_str(), filePath);
+}
+
+static void infinityToySelectedCallback(ConfigItemSelectInfinity *infinity, const char *filePath, uint8_t slot) {
+    DEBUG_FUNCTION_LINE_INFO("New infinity toy selected: %d for %s", slot, filePath);
+    WUPSStorageAPI_StoreString(nullptr, ("currentInfinityPath" + std::to_string(slot)).c_str(), filePath);
 }
 
 WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle rootHandle) {
@@ -175,7 +180,7 @@ WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle ro
         skylanderCategory.add(WUPSConfigItemStub::Create("Press \ue002 to Remove Skylander From Slot"));
         for (int i = 0; i < 16; i++) {
             char *currentPath    = new char[1024];
-            WUPSStorageError err = WUPSStorageAPI_GetString(nullptr, ("currentPath" + std::to_string(i)).c_str(), currentPath, 1024, nullptr);
+            WUPSStorageError err = WUPSStorageAPI_GetString(nullptr, ("currentSkylanderPath" + std::to_string(i)).c_str(), currentPath, 1024, nullptr);
             DEBUG_FUNCTION_LINE_VERBOSE("Adding skylander config: %d", i);
             if (err == WUPS_STORAGE_ERROR_SUCCESS) {
                 if (!ConfigItemSelectSkylander_AddToCategory(skylanderCategory.getHandle(), ("select_skylander" + std::to_string(i)).c_str(), ("Select Skylander " + std::to_string(i + 1)).c_str(), i, TAG_EMULATION_PATH.c_str(), currentPath, skylanderSelectedCallback)) {
@@ -189,6 +194,18 @@ WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle ro
         }
 
         root.add(std::move(skylanderCategory));
+
+        auto infinityCategory = WUPSConfigCategory::Create("Infinity Manager");
+        infinityCategory.add(WUPSConfigItemStub::Create("Press \ue002 to Remove Infinity Toy From Slot"));
+        ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "playset_powerdisc", "Play Set/Power Disc", 0, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
+        ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "powerdisc_two", "Power Disc Two", 1, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
+        ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "powerdisc_three", "Power Disc Three", 2, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
+        ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "player_one", "Player One", 3, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
+        ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "p1_ability_one", "Ability One (P1)", 4, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
+        ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "p2_ability_one", "Ability One (P2)", 5, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
+        ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "player_two", "Player Two", 6, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
+        ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "p2_ability_one", "Ability One (P2)", 7, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
+        ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "playset_powerdisc", "Ability Two (P2)", 8, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
         // root.add(WUPSConfigCategory::Create("Disney Manager"));
         // root.add(WUPSConfigCategory::Create("Dimensions Manager"));
     } catch (std::exception &e) {

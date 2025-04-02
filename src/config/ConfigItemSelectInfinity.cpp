@@ -2,8 +2,8 @@
 * Code repurposed from re_nfpii
 */
 
-#include "ConfigItemSelectSkylander.hpp"
-#include "devices/Skylander.h"
+#include "ConfigItemSelectInfinity.hpp"
+#include "devices/Infinity.h"
 #include "utils/DrawUtils.hpp"
 #include "utils/input.h"
 #include "utils/logger.h"
@@ -54,23 +54,23 @@ struct ListEntry {
     bool isFavorite;
 };
 
-static void ConfigItemSelectSkylander_onDelete(void *context);
-static bool ConfigItemSelectSkylander_callCallback(void *context);
+static void ConfigItemSelectInfinity_onDelete(void *context);
+static bool ConfigItemSelectInfinity_callCallback(void *context);
 
 static std::vector<std::string> favorites;
 static bool favoritesUpdated  = false;
 static bool favoritesPerTitle = false;
 
-std::vector<std::string> &ConfigItemSelectSkylander_GetFavorites(void) {
+std::vector<std::string> &ConfigItemSelectInfinity_GetFavorites(void) {
     return favorites;
 }
 
-void ConfigItemSelectSkylander_Init(std::string rootPath, bool favoritesPerTitle) {
+void ConfigItemSelectInfinity_Init(std::string rootPath, bool favoritesPerTitle) {
     favorites.clear();
     favoritesUpdated = false;
 
     ::favoritesPerTitle      = favoritesPerTitle;
-    std::string favoritesKey = "skylanderfavorites";
+    std::string favoritesKey = "infinityfavorites";
     if (favoritesPerTitle) {
         uint64_t titleId = OSGetTitleID();
         char titleIdString[17];
@@ -102,13 +102,13 @@ void ConfigItemSelectSkylander_Init(std::string rootPath, bool favoritesPerTitle
     delete[] favoritesString;
 }
 
-static void saveFavorites(ConfigItemSelectSkylander *item) {
+static void saveFavorites(ConfigItemSelectInfinity *item) {
     if (!favoritesUpdated || favorites.size() == 0) {
         return;
     }
 
     // Store the favorites with ":" as the path separator
-    // Strip the rootPath (/vol/external01/wiiu/re_nfpii) prefix
+    // Strip the rootPath (/vol/external01/wiiu/re_nsyshid) prefix
     // In the end everything is stored as one string like "amiibo1.bin:folder1/amiibo2.bin:folder2/amiibo3.bin"
     std::string saveBuf;
     for (const auto &fav : favorites) {
@@ -118,7 +118,7 @@ static void saveFavorites(ConfigItemSelectSkylander *item) {
     // get rid of the last ':'
     saveBuf.resize(saveBuf.size() - 1);
 
-    std::string favoritesKey = "skylanderfavorites";
+    std::string favoritesKey = "infinityfavorites";
     if (favoritesPerTitle) {
         uint64_t titleId = OSGetTitleID();
         char titleIdString[17];
@@ -132,15 +132,10 @@ static void saveFavorites(ConfigItemSelectSkylander *item) {
     favoritesUpdated = false;
 }
 
-static void enterSelectionMenu(ConfigItemSelectSkylander *item) {
+static void enterSelectionMenu(ConfigItemSelectInfinity *item) {
     std::vector<ListEntry> entries;
     bool highlightSelected = true;
     bool openTidFolder     = true;
-
-    // jump to the path of the currently selected amiibo
-    // if (!item->selectedSkylander.empty() && item->selectedSkylander.starts_with(item->rootPath)) {
-    //     item->currentPath = item->selectedSkylander.substr(0, item->selectedSkylander.find_last_of("/") + 1);
-    // }
 
     // Init DrawUtils
     DrawUtils::initBuffers();
@@ -231,9 +226,9 @@ static void enterSelectionMenu(ConfigItemSelectSkylander *item) {
 
         // Check if the current amiibo is part of the entries, and highlight if it is
         int32_t selected = -1;
-        if (!item->selectedSkylander.empty()) {
+        if (!item->selectedFigure.empty()) {
             for (size_t i = 0; i < entries.size(); ++i) {
-                if (std::string(item->currentPath + entries[i].name).compare(item->selectedSkylander) == 0) {
+                if (std::string(item->currentPath + entries[i].name).compare(item->selectedFigure) == 0) {
                     selected = (int) i;
                     break;
                 }
@@ -297,9 +292,9 @@ static void enterSelectionMenu(ConfigItemSelectSkylander *item) {
             if (buttonsTriggered & VPAD_BUTTON_A) {
                 ListEntry &currentEntry = entries[currentIndex];
                 if (currentEntry.type == LIST_ENTRY_TYPE_FILE) {
-                    selected                = currentIndex;
-                    item->selectedSkylander = item->currentPath + currentEntry.name;
-                    redraw                  = true;
+                    selected             = currentIndex;
+                    item->selectedFigure = item->currentPath + currentEntry.name;
+                    redraw               = true;
                 } else if (currentEntry.type == LIST_ENTRY_TYPE_DIR) {
                     item->currentPath += currentEntry.name + "/";
                     break;
@@ -314,7 +309,7 @@ static void enterSelectionMenu(ConfigItemSelectSkylander *item) {
                 // quit for the root path
                 if (item->currentPath == item->rootPath) {
                     // calling this manually is bleh but that way the config entry gets updated immediately after returning
-                    ConfigItemSelectSkylander_callCallback(item);
+                    ConfigItemSelectInfinity_callCallback(item);
                     return;
                 }
 
@@ -344,7 +339,7 @@ static void enterSelectionMenu(ConfigItemSelectSkylander *item) {
 
             if (buttonsTriggered & VPAD_BUTTON_HOME) {
                 // calling this manually is bleh but that way the config entry gets updated immediately after returning
-                ConfigItemSelectSkylander_callCallback(item);
+                ConfigItemSelectInfinity_callCallback(item);
                 return;
             }
 
@@ -408,7 +403,7 @@ static void enterSelectionMenu(ConfigItemSelectSkylander *item) {
 
                 // draw top bar
                 DrawUtils::setFontSize(24);
-                DrawUtils::print(16, 6 + 24, "re_nsyshid - Select Skylander");
+                DrawUtils::print(16, 6 + 24, "re_nsyshid - Select Infinity Toy");
                 DrawUtils::setFontSize(18);
                 std::string path = item->currentPath.c_str();
                 // remove root path
@@ -447,83 +442,93 @@ static void enterSelectionMenu(ConfigItemSelectSkylander *item) {
     }
 }
 
-static bool ConfigItemSelectSkylander_callCallback(void *context) {
-    ConfigItemSelectSkylander *item = (ConfigItemSelectSkylander *) context;
+static bool ConfigItemSelectInfinity_callCallback(void *context) {
+    ConfigItemSelectInfinity *item = (ConfigItemSelectInfinity *) context;
 
     saveFavorites(item);
 
-    if (item->callback && !item->selectedSkylander.empty()) {
-        FILE *skylanderFile = fopen(item->selectedSkylander.c_str(), "r+b");
-        if (!skylanderFile) {
-            DEBUG_FUNCTION_LINE_ERR("Failed to open Skylander file");
+    if (item->callback && !item->selectedFigure.empty()) {
+        FILE *figureFile = fopen(item->selectedFigure.c_str(), "r+b");
+        if (!figureFile) {
+            DEBUG_FUNCTION_LINE_ERR("Failed to open Infinity Toy file");
         } else {
-            std::array<uint8_t, 0x10 * 0x40> fileData;
-            const size_t ret_code = fread(fileData.data(), sizeof(fileData[0]), fileData.size(), skylanderFile);
+            std::array<uint8_t, 0x10 * 0x14> fileData;
+            const size_t ret_code = fread(fileData.data(), sizeof(fileData[0]), fileData.size(), figureFile);
             if (ret_code == fileData.size()) {
-                if (!g_skyportal.LoadSkylander(fileData.data(), std::move(skylanderFile), item->slot)) {
-                    DEBUG_FUNCTION_LINE_ERR("Failed to load skylander file");
+                int32_t figNum = g_infinitybase.LoadFigure(fileData, std::move(figureFile), item->slot);
+                if (figNum == 0) {
+                    DEBUG_FUNCTION_LINE_ERR("Failed to load Infinity Toy file");
+                } else {
+                    item->figNum = figNum;
                 }
             } else {
-                DEBUG_FUNCTION_LINE_ERR("Skylander file too small");
-                fclose(skylanderFile);
+                DEBUG_FUNCTION_LINE_ERR("Infinity Toy file too small");
+                fclose(figureFile);
             }
         }
-        item->callback(item, item->selectedSkylander.c_str(), item->slot);
+        item->callback(item, item->selectedFigure.c_str(), item->slot);
         return true;
     }
 
     return false;
 }
 
-static void ConfigItemSelectSkylander_onInput(void *context, WUPSConfigSimplePadData input) {
-    ConfigItemSelectSkylander *item = (ConfigItemSelectSkylander *) context;
+static void ConfigItemSelectInfinity_onInput(void *context, WUPSConfigSimplePadData input) {
+    ConfigItemSelectInfinity *item = (ConfigItemSelectInfinity *) context;
 
     if ((input.buttons_d & WUPS_CONFIG_BUTTON_A) == WUPS_CONFIG_BUTTON_A) {
         enterSelectionMenu(item);
     } else if ((input.buttons_d & WUPS_CONFIG_BUTTON_X) == WUPS_CONFIG_BUTTON_X) {
-        g_skyportal.RemoveSkylander(item->slot);
-        item->selectedSkylander.clear();
+        g_infinitybase.RemoveFigure(item->slot);
+        item->selectedFigure.clear();
+        item->figNum = 0;
     }
 }
 
-static bool ConfigItemSelectSkylander_isMovementAllowed(void *context) {
+static bool ConfigItemSelectInfinity_isMovementAllowed(void *context) {
     return true;
 }
 
-static int32_t ConfigItemSelectSkylander_getCurrentValueDisplay(void *context, char *out_buf, int32_t out_size) {
-    ConfigItemSelectSkylander *item = (ConfigItemSelectSkylander *) context;
+static int32_t ConfigItemSelectInfinity_getCurrentValueDisplay(void *context, char *out_buf, int32_t out_size) {
+    ConfigItemSelectInfinity *item = (ConfigItemSelectInfinity *) context;
 
-    strncpy(out_buf, g_skyportal.GetSkylanderFromUISlot(item->slot).c_str(), out_size);
+    if (item->figNum == 0) {
+        strncpy(out_buf, "None", out_size);
+        return 0;
+    }
+    auto figure = g_infinitybase.FindFigure(item->figNum);
+
+    strncpy(out_buf, figure.second.c_str(), out_size);
     return 0;
 }
 
-static void ConfigItemSelectSkylander_restoreDefault(void *context) {
-    ConfigItemSelectSkylander *item = (ConfigItemSelectSkylander *) context;
-    item->selectedSkylander         = "";
-    item->currentPath               = item->rootPath;
+static void ConfigItemSelectInfinity_restoreDefault(void *context) {
+    ConfigItemSelectInfinity *item = (ConfigItemSelectInfinity *) context;
+    item->selectedFigure        = "";
+    item->currentPath              = item->rootPath;
 }
 
-static void ConfigItemSelectSkylander_onSelected(void *context, bool isSelected) {
+static void ConfigItemSelectInfinity_onSelected(void *context, bool isSelected) {
 }
 
-bool ConfigItemSelectSkylander_AddToCategory(WUPSConfigCategoryHandle cat, const char *configID, const char *displayName, uint8_t slot, const char *skylanderFolder, const char *currentSkylander, SkylanderSelectedCallback callback) {
-    if (!displayName || !skylanderFolder || !currentSkylander) {
+bool ConfigItemSelectInfinity_AddToCategory(WUPSConfigCategoryHandle cat, const char *configID, const char *displayName, uint8_t slot, const char *infinityFolder, const char *currentFigure, InfinityFigureSelectedCallback callback) {
+    if (!displayName || !infinityFolder || !currentFigure) {
         return false;
     }
 
-    ConfigItemSelectSkylander *item = new ConfigItemSelectSkylander;
+    ConfigItemSelectInfinity *item = new ConfigItemSelectInfinity;
     if (!item) {
         return false;
     }
 
-    if (g_skyportal.GetSkylanderFromUISlot(slot) == "None") {
-        item->selectedSkylander = skylanderFolder;
+    if (g_infinitybase.FindFigure(slot).second == "None") {
+        item->selectedFigure = infinityFolder;
     } else {
-        item->selectedSkylander = currentSkylander;
+        item->selectedFigure = currentFigure;
     }
 
     item->callback = callback;
-    item->rootPath = skylanderFolder;
+    item->rootPath = infinityFolder;
     item->slot     = slot;
 
     // add a trailing "/" to work with the dir browse impl
@@ -540,14 +545,14 @@ bool ConfigItemSelectSkylander_AddToCategory(WUPSConfigCategoryHandle cat, const
     }
 
     WUPSConfigAPIItemCallbacksV2 callbacks = {
-            .getCurrentValueDisplay         = &ConfigItemSelectSkylander_getCurrentValueDisplay,
-            .getCurrentValueSelectedDisplay = &ConfigItemSelectSkylander_getCurrentValueDisplay,
-            .onSelected                     = &ConfigItemSelectSkylander_onSelected,
-            .restoreDefault                 = &ConfigItemSelectSkylander_restoreDefault,
-            .isMovementAllowed              = &ConfigItemSelectSkylander_isMovementAllowed,
-            .onInput                        = &ConfigItemSelectSkylander_onInput,
-            .onDelete                       = &ConfigItemSelectSkylander_onDelete,
-            //.onCloseCallback                = &ConfigItemSelectSkylander_callCallback,
+            .getCurrentValueDisplay         = &ConfigItemSelectInfinity_getCurrentValueDisplay,
+            .getCurrentValueSelectedDisplay = &ConfigItemSelectInfinity_getCurrentValueDisplay,
+            .onSelected                     = &ConfigItemSelectInfinity_onSelected,
+            .restoreDefault                 = &ConfigItemSelectInfinity_restoreDefault,
+            .isMovementAllowed              = &ConfigItemSelectInfinity_isMovementAllowed,
+            .onInput                        = &ConfigItemSelectInfinity_onInput,
+            .onDelete                       = &ConfigItemSelectInfinity_onDelete,
+            //.onCloseCallback                = &ConfigItemSelectInfinity_callCallback,
     };
 
     WUPSConfigAPIItemOptionsV2 options = {
@@ -569,8 +574,8 @@ bool ConfigItemSelectSkylander_AddToCategory(WUPSConfigCategoryHandle cat, const
     return true;
 }
 
-static void ConfigItemSelectSkylander_onDelete(void *context) {
-    ConfigItemSelectSkylander *item = (ConfigItemSelectSkylander *) context;
+static void ConfigItemSelectInfinity_onDelete(void *context) {
+    ConfigItemSelectInfinity *item = (ConfigItemSelectInfinity *) context;
 
     free(item->configID);
 

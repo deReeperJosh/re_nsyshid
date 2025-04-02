@@ -1,4 +1,7 @@
 #include "Infinity.h"
+
+#include <format>
+
 #include "utils/logger.h"
 
 #include "utils/aes.hpp"
@@ -732,6 +735,19 @@ InfinityBase::LoadFigure(const std::array<uint8_t, INF_FIGURE_SIZE> &buf,
     m_figureAddedRemovedResponses.push(figureChangeResponse);
 
     return number;
+}
+
+std::pair<uint8_t, std::string> InfinityBase::FindFigure(uint32_t figNum) {
+    for (const auto &it : GetFigureList()) {
+        if (it.first == figNum) {
+            return it.second;
+        }
+    }
+    return {0, std::format("Unknown Figure ({})", figNum)};
+}
+
+std::map<const uint32_t, const std::pair<const uint8_t, const char *>> InfinityBase::GetFigureList() {
+    return s_listFigures;
 }
 
 uint8_t InfinityBase::GenerateChecksum(const std::array<uint8_t, 32> &data,
