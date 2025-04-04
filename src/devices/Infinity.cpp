@@ -378,7 +378,7 @@ bool InfinityUSBDevice::GetDescriptor(uint8_t descType,
     // HID descriptor
     *(uint8_t *) (currentWritePtr + 0) = 9;    // bLength
     *(uint8_t *) (currentWritePtr + 1) = 0x21; // bDescriptorType
-    *(uint8_t *) (currentWritePtr + 2) = 0x11; // bcdHID
+    *(uint8_t *) (currentWritePtr + 2) = 0x01; // bcdHID
     *(uint8_t *) (currentWritePtr + 3) = 0x01; // bcdHID
     *(uint8_t *) (currentWritePtr + 4) = 0x00; // bCountryCode
     *(uint8_t *) (currentWritePtr + 5) = 0x01; // bNumDescriptors
@@ -391,16 +391,16 @@ bool InfinityUSBDevice::GetDescriptor(uint8_t descType,
     *(uint8_t *) (currentWritePtr + 1) = 0x05; // bDescriptorType
     *(uint8_t *) (currentWritePtr + 2) = 0x81; // bEndpointAddress
     *(uint8_t *) (currentWritePtr + 3) = 0x03; // bmAttributes
-    *(uint8_t *) (currentWritePtr + 4) = 0x40; // wMaxPacketSize
+    *(uint8_t *) (currentWritePtr + 4) = 0x20; // wMaxPacketSize
     *(uint8_t *) (currentWritePtr + 5) = 0x00; // wMaxPacketSize
     *(uint8_t *) (currentWritePtr + 6) = 0x01; // bInterval
     currentWritePtr                    = currentWritePtr + 7;
     // endpoint descriptor 2
     *(uint8_t *) (currentWritePtr + 0) = 7;    // bLength
     *(uint8_t *) (currentWritePtr + 1) = 0x05; // bDescriptorType
-    *(uint8_t *) (currentWritePtr + 2) = 0x02; // bEndpointAddress
+    *(uint8_t *) (currentWritePtr + 2) = 0x01; // bEndpointAddress
     *(uint8_t *) (currentWritePtr + 3) = 0x03; // bmAttributes
-    *(uint8_t *) (currentWritePtr + 4) = 0x40; // wMaxPacketSize
+    *(uint8_t *) (currentWritePtr + 4) = 0x20; // wMaxPacketSize
     *(uint8_t *) (currentWritePtr + 5) = 0x00; // wMaxPacketSize
     *(uint8_t *) (currentWritePtr + 6) = 0x01; // bInterval
     currentWritePtr                    = currentWritePtr + 7;
