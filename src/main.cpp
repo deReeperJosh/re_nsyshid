@@ -206,7 +206,8 @@ WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle ro
         ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "player_two", "Player Two", 6, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
         ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "p2_ability_one", "Ability One (P2)", 7, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
         ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "playset_powerdisc", "Ability Two (P2)", 8, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
-        // root.add(WUPSConfigCategory::Create("Disney Manager"));
+
+        root.add(std::move(infinityCategory));
         // root.add(WUPSConfigCategory::Create("Dimensions Manager"));
     } catch (std::exception &e) {
         DEBUG_FUNCTION_LINE_ERR("Creating config menu failed: %s", e.what());

@@ -522,7 +522,7 @@ void InfinityBase::SendCommand(uint8_t *buf, uint32_t length) {
             break;
         }
         default:
-            DEBUG_FUNCTION_LINE_ERR("Unknown Infinity Base Command: %x", command);
+            DEBUG_FUNCTION_LINE_ERR("Unknown Infinity Base Command: %02X", command);
             break;
     }
 
@@ -669,6 +669,7 @@ bool InfinityBase::RemoveFigure(uint8_t position) {
 
     figure.Save();
     fclose(figure.infFile);
+    figure.figNum = 0;
 
     if (figure.present) {
         figure.present = false;
@@ -699,11 +700,17 @@ InfinityBase::LoadFigure(const std::array<uint8_t, INF_FIGURE_SIZE> &buf,
         sha1Calc.push_back(buf[i]);
     }
 
+    DEBUG_FUNCTION_LINE_INFO("sha1calc %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X", sha1Calc[0], sha1Calc[1], sha1Calc[2], sha1Calc[3], sha1Calc[4], sha1Calc[5], sha1Calc[6], sha1Calc[7], sha1Calc[8], sha1Calc[9], sha1Calc[10], sha1Calc[11], sha1Calc[12], sha1Calc[13], sha1Calc[14], sha1Calc[15], sha1Calc[16], sha1Calc[17], sha1Calc[18], sha1Calc[19], sha1Calc[20], sha1Calc[21], sha1Calc[22], sha1Calc[23], sha1Calc[24], sha1Calc[25], sha1Calc[26], sha1Calc[27], sha1Calc[28], sha1Calc[29], sha1Calc[30], sha1Calc[31], sha1Calc[32], sha1Calc[33], sha1Calc[34], sha1Calc[35], sha1Calc[36], sha1Calc[37], sha1Calc[38]);
+
     std::array<uint8_t, 16> key = GenerateInfinityFigureKey(sha1Calc);
+
+    //DEBUG_FUNCTION_LINE_INFO("key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X", key[0], key[1], key[2], key[3], key[4], key[5], key[6], key[7], key[8], key[9], key[10], key[11], key[12], key[13], key[14], key[15]);
 
     std::array<uint8_t, 16> infinity_decrypted_block = {};
     std::array<uint8_t, 16> encryptedBlock           = {};
     memcpy(encryptedBlock.data(), &buf[16], 16);
+
+    //DEBUG_FUNCTION_LINE_INFO("encrypted %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X", encryptedBlock[0], encryptedBlock[1], encryptedBlock[2], encryptedBlock[3], encryptedBlock[4], encryptedBlock[5], encryptedBlock[6], encryptedBlock[7], encryptedBlock[8], encryptedBlock[9], encryptedBlock[10], encryptedBlock[11], encryptedBlock[12], encryptedBlock[13], encryptedBlock[14], encryptedBlock[15]);
 
     AES_ctx context;
     AES_init_ctx(&context, key.data());
@@ -717,6 +724,7 @@ InfinityBase::LoadFigure(const std::array<uint8_t, INF_FIGURE_SIZE> &buf,
     InfinityFigure &figure = m_figures[position];
 
     figure.infFile = std::move(inFile);
+    figure.figNum = number;
     memcpy(figure.data.data(), buf.data(), figure.data.size());
     figure.present = true;
     if (figure.orderAdded == 255) {
@@ -748,6 +756,10 @@ std::pair<uint8_t, std::string> InfinityBase::FindFigure(uint32_t figNum) {
 
 std::map<const uint32_t, const std::pair<const uint8_t, const char *>> InfinityBase::GetFigureList() {
     return s_listFigures;
+}
+
+uint32_t InfinityBase::FindFigureFromSlot(uint8_t slot) {
+    return m_figures[slot].figNum;
 }
 
 uint8_t InfinityBase::GenerateChecksum(const std::array<uint8_t, 32> &data,

@@ -64,6 +64,7 @@ public:
         std::array<uint8_t, INF_FIGURE_SIZE> data{};
         bool present       = false;
         uint8_t orderAdded = 255;
+        uint32_t figNum    = 0;
         void Save();
     };
 
@@ -87,6 +88,7 @@ public:
                         FILE *file, uint8_t position);
     static std::map<const uint32_t, const std::pair<const uint8_t, const char *>> GetFigureList();
     std::pair<uint8_t, std::string> FindFigure(uint32_t figNum);
+    uint32_t FindFigureFromSlot(uint8_t slot);
 
 protected:
     std::mutex m_infinityMutex;

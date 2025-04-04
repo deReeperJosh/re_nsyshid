@@ -458,8 +458,6 @@ static bool ConfigItemSelectInfinity_callCallback(void *context) {
                 int32_t figNum = g_infinitybase.LoadFigure(fileData, std::move(figureFile), item->slot);
                 if (figNum == 0) {
                     DEBUG_FUNCTION_LINE_ERR("Failed to load Infinity Toy file");
-                } else {
-                    item->figNum = figNum;
                 }
             } else {
                 DEBUG_FUNCTION_LINE_ERR("Infinity Toy file too small");
@@ -481,7 +479,6 @@ static void ConfigItemSelectInfinity_onInput(void *context, WUPSConfigSimplePadD
     } else if ((input.buttons_d & WUPS_CONFIG_BUTTON_X) == WUPS_CONFIG_BUTTON_X) {
         g_infinitybase.RemoveFigure(item->slot);
         item->selectedFigure.clear();
-        item->figNum = 0;
     }
 }
 
@@ -492,11 +489,11 @@ static bool ConfigItemSelectInfinity_isMovementAllowed(void *context) {
 static int32_t ConfigItemSelectInfinity_getCurrentValueDisplay(void *context, char *out_buf, int32_t out_size) {
     ConfigItemSelectInfinity *item = (ConfigItemSelectInfinity *) context;
 
-    if (item->figNum == 0) {
+    if (g_infinitybase.FindFigureFromSlot(item->slot) == 0) {
         strncpy(out_buf, "None", out_size);
         return 0;
     }
-    auto figure = g_infinitybase.FindFigure(item->figNum);
+    auto figure = g_infinitybase.FindFigure(g_infinitybase.FindFigureFromSlot(item->slot));
 
     strncpy(out_buf, figure.second.c_str(), out_size);
     return 0;
@@ -504,7 +501,7 @@ static int32_t ConfigItemSelectInfinity_getCurrentValueDisplay(void *context, ch
 
 static void ConfigItemSelectInfinity_restoreDefault(void *context) {
     ConfigItemSelectInfinity *item = (ConfigItemSelectInfinity *) context;
-    item->selectedFigure        = "";
+    item->selectedFigure           = "";
     item->currentPath              = item->rootPath;
 }
 

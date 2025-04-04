@@ -16,7 +16,6 @@ struct ConfigItemSelectInfinity {
     InfinityFigureSelectedCallback callback;
 
     uint8_t slot;
-    uint32_t figNum;
     std::string rootPath;
     std::string currentPath;
     std::string selectedFigure;
