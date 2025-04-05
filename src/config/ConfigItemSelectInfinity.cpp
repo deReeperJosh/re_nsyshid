@@ -455,6 +455,7 @@ static bool ConfigItemSelectInfinity_callCallback(void *context) {
             std::array<uint8_t, 0x10 * 0x14> fileData;
             const size_t ret_code = fread(fileData.data(), sizeof(fileData[0]), fileData.size(), figureFile);
             if (ret_code == fileData.size()) {
+                g_infinitybase.RemoveFigure(item->slot);
                 int32_t figNum = g_infinitybase.LoadFigure(fileData, std::move(figureFile), item->slot);
                 if (figNum == 0) {
                     DEBUG_FUNCTION_LINE_ERR("Failed to load Infinity Toy file");
