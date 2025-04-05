@@ -202,7 +202,7 @@ WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle ro
         ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "powerdisc_three", "Power Disc Three", 2, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
         ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "player_one", "Player One", 3, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
         ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "p1_ability_one", "Ability One (P1)", 4, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
-        ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "p1_ability_two", "Ability Two (P2)", 5, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
+        ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "p1_ability_two", "Ability Two (P1)", 5, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
         ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "player_two", "Player Two", 6, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
         ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "p2_ability_one", "Ability One (P2)", 7, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
         ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "p2_ability_two", "Ability Two (P2)", 8, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
