@@ -140,8 +140,8 @@ DECL_FUNCTION(int32_t, HIDAddClient, HIDClient *client, HIDAttachCallback attach
     WUPSStorageAPI::Get(std::string_view(EMULATED_DEVICE_CONFIG_ID), deviceToEmulate);
 
     if (!m_device ||
-        (deviceToEmulate == DeviceToEmulate::SKYLANDER && (m_device->m_productId != 0x3014 && m_device->m_productId != 0x5001)) ||
-        (deviceToEmulate == DeviceToEmulate::INFINITY && (m_device->m_productId != 0x6F0E && m_device->m_productId != 0x2901))) {
+        (deviceToEmulate == DeviceToEmulate::SKYLANDER && (m_device->m_vendorId != 0x3014 && m_device->m_productId != 0x5001)) ||
+        (deviceToEmulate == DeviceToEmulate::INFINITY && (m_device->m_vendorId != 0x6F0E && m_device->m_productId != 0x2901))) {
         if (deviceToEmulate == DeviceToEmulate::SKYLANDER) {
             DEBUG_FUNCTION_LINE_INFO("adding emulated skylander portal");
             HIDDevice *devicePtr;
