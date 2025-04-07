@@ -16,7 +16,7 @@ Includes some code repurposed from the [re_nfpii](https://github.com/GaryOderNic
 
 - Download the [latest release](https://github.com/deReeperJosh/re_nsyshid/releases) or the artifacts of latest nightly build from [here](https://nightly.link/deReeperJosh/re_nsyshid/workflows/build/main/re_nsyshid.zip).
 - Copy the contents of the downloaded *`.zip`* file to your target environment.
-- Copy your NFC Figure dumps to `wiiu/re_nsyshid`. Subfolders are also supported and can be browsed from the configuration menu.
+- Copy your NFC Figure dumps to `SD:/wiiu/re_nsyshid`. Subfolders are also supported and can be browsed from the configuration menu.
 - Open the plugin configuration menu with L + Down + SELECT.
 - Enable Emulation, and choose an Emulated Device.
 - Choose a Figure for your chosen device, for example enter Skylander Manager if you chose the Skylander Portal, and choose a Skylander to load in a specific slot.
