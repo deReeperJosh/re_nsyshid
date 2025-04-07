@@ -15,6 +15,7 @@
 #include <thread>
 
 #include "devices/Device.h"
+#include "devices/Dimensions.h"
 #include "devices/Infinity.h"
 #include "devices/Skylander.h"
 #include "re_nsyshid.h"
@@ -141,7 +142,8 @@ DECL_FUNCTION(int32_t, HIDAddClient, HIDClient *client, HIDAttachCallback attach
 
     if (!m_device ||
         (deviceToEmulate == DeviceToEmulate::SKYLANDER && (m_device->m_vendorId != 0x3014 && m_device->m_productId != 0x5001)) ||
-        (deviceToEmulate == DeviceToEmulate::INFINITY && (m_device->m_vendorId != 0x6F0E && m_device->m_productId != 0x2901))) {
+        (deviceToEmulate == DeviceToEmulate::INFINITY && (m_device->m_vendorId != 0x6F0E && m_device->m_productId != 0x2901)) ||
+        (deviceToEmulate == DeviceToEmulate::DIMENSIONS && (m_device->m_vendorId != 0x6F0E && m_device->m_productId != 0x4102))) {
         if (deviceToEmulate == DeviceToEmulate::SKYLANDER) {
             DEBUG_FUNCTION_LINE_INFO("adding emulated skylander portal");
             HIDDevice *devicePtr;
@@ -167,6 +169,19 @@ DECL_FUNCTION(int32_t, HIDAddClient, HIDClient *client, HIDAttachCallback attach
             infinityDevice->AssignHID(devicePtr);
             deviceMutex.lock();
             m_device = infinityDevice;
+            deviceMutex.unlock();
+        } else if (deviceToEmulate == DeviceToEmulate::DIMENSIONS) {
+            DEBUG_FUNCTION_LINE_INFO("adding emulated dimensions toypad");
+            HIDDevice *devicePtr;
+            auto dimensionsDevice = std::make_shared<DimensionsUSBDevice>();
+            devicePtr           = GetFreeHID();
+            if (devicePtr == nullptr) {
+                return 0;
+            }
+            devicePtr->handle = GenerateHIDHandle();
+            dimensionsDevice->AssignHID(devicePtr);
+            deviceMutex.lock();
+            m_device = dimensionsDevice;
             deviceMutex.unlock();
         }
     }
