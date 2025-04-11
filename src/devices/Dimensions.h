@@ -67,6 +67,24 @@ public:
         void Save();
     };
 
+    enum class DimensionsColorType {
+        NONE,
+        COLOR,
+        FADE,
+        FLASH
+    };
+
+    struct DimensionsLEDColor final {
+        uint8_t red                   = 0;
+        uint8_t green                 = 0;
+        uint8_t blue                  = 0;
+        uint8_t speed                 = 0;
+        uint8_t cycles                = 0;
+        uint8_t whiteDuration         = 0;
+        uint8_t colorDuration         = 0;
+        DimensionsColorType colorType = DimensionsColorType::NONE;
+    };
+
     std::array<uint8_t, 32> GetStatus();
     void SendCommand(std::span<const uint8_t, 32> buf);
 
@@ -74,6 +92,20 @@ public:
                               std::array<uint8_t, 32> &replyBuf);
     void GetChallengeResponse(std::span<const uint8_t, 8> buf, uint8_t sequence,
                               std::array<uint8_t, 32> &replyBuf);
+    void SetPadColor(std::span<const uint8_t, 4> buf, uint8_t sequence,
+                     std::array<uint8_t, 32> &replyBuf);
+    void SetPadFade(std::span<const uint8_t, 6> buf, uint8_t sequence,
+                    std::array<uint8_t, 32> &replyBuf);
+    void SetPadFlash(std::span<const uint8_t, 7> buf, uint8_t sequence,
+                     std::array<uint8_t, 32> &replyBuf);
+    void SetFadeRandom(std::span<const uint8_t, 3> buf, uint8_t sequence,
+                       std::array<uint8_t, 32> &replyBuf);
+    void SetFadeAll(std::span<const uint8_t, 18> buf, uint8_t sequence,
+                    std::array<uint8_t, 32> &replyBuf);
+    void SetFlashAll(std::span<const uint8_t, 21> buf, uint8_t sequence,
+                     std::array<uint8_t, 32> &replyBuf);
+    void SetColorAll(std::span<const uint8_t, 12> buf, uint8_t sequence,
+                     std::array<uint8_t, 32> &replyBuf);
     void QueryBlock(uint8_t index, uint8_t page, std::array<uint8_t, 32> &replyBuf,
                     uint8_t sequence);
     void WriteBlock(uint8_t index, uint8_t page, std::span<const uint8_t, 4> toWriteBuf, std::array<uint8_t, 32> &replyBuf,
@@ -91,6 +123,7 @@ public:
     std::string FindFigure(uint32_t figNum);
 
     std::array<std::optional<uint32_t>, 7> GetCurrentFigures();
+    std::array<DimensionsLEDColor, 3> GetPadColors();
 
 protected:
     std::mutex m_dimensionsMutex;
@@ -120,5 +153,9 @@ private:
 
     std::queue<std::array<uint8_t, 32>> m_figureAddedRemovedResponses;
     std::queue<std::array<uint8_t, 32>> m_queries;
+
+    DimensionsLEDColor m_colorRight = {};
+    DimensionsLEDColor m_colorLeft  = {};
+    DimensionsLEDColor m_colorTop   = {};
 };
 extern DimensionsToypad g_dimensionstoypad;

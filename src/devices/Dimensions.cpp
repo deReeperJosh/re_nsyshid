@@ -1,9 +1,12 @@
 #include "Dimensions.h"
 
+#include <array>
+#include <cstdlib>
 #include <cstring>
 #include <format>
 #include <optional>
 #include <random>
+#include <span>
 
 #include "utils/logger.h"
 
@@ -557,17 +560,38 @@ void DimensionsToypad::SendCommand(std::span<const uint8_t, 32> buf) {
             break;
         }
         case 0xC0: // Color
-        case 0xC1: // Get Pad Color
+        {
+            g_dimensionstoypad.SetPadColor(std::span<const uint8_t, 4>{buf.begin() + 4, 4}, sequence, q_result);
+            break;
+        }
         case 0xC2: // Fade
+        {
+            g_dimensionstoypad.SetPadFade(std::span<const uint8_t, 6>{buf.begin() + 4, 6}, sequence, q_result);
+            break;
+        }
         case 0xC3: // Flash
+        {
+            g_dimensionstoypad.SetPadFlash(std::span<const uint8_t, 7>{buf.begin() + 4, 7}, sequence, q_result);
+            break;
+        }
         case 0xC4: // Fade Random
+        {
+            g_dimensionstoypad.SetFadeRandom(std::span<const uint8_t, 3>{buf.begin() + 4, 3}, sequence, q_result);
+            break;
+        }
         case 0xC6: // Fade All
+        {
+            g_dimensionstoypad.SetFadeAll(std::span<const uint8_t, 18>{buf.begin() + 4, 18}, sequence, q_result);
+            break;
+        }
         case 0xC7: // Flash All
+        {
+            g_dimensionstoypad.SetFlashAll(std::span<const uint8_t, 21>{buf.begin() + 4, 21}, sequence, q_result);
+            break;
+        }
         case 0xC8: // Color All
         {
-            // Send a blank response to acknowledge color has been sent to toypad
-            q_result    = {0x55, 0x01, sequence};
-            q_result[3] = GenerateChecksum(q_result, 3);
+            g_dimensionstoypad.SetColorAll(std::span<const uint8_t, 12>{buf.begin() + 4, 12}, sequence, q_result);
             break;
         }
         case 0xD2: // Read
@@ -588,17 +612,18 @@ void DimensionsToypad::SendCommand(std::span<const uint8_t, 32> buf) {
             g_dimensionstoypad.GetModel(std::span<const uint8_t, 8>{buf.begin() + 4, 8}, sequence, q_result);
             break;
         }
+        case 0xC1: // Get Pad Color (debug only)
         case 0xD0: // Tag List
         case 0xE1: // PWD
         case 0xE5: // Active
         case 0xFF: // LEDS Query
         {
             // Further investigation required
-            //cemuLog_log(LogType::Force, "Unimplemented LD Function: {:x}", command);
+            DEBUG_FUNCTION_LINE_ERR("Unimplemented LD Function: %02X", command);
             break;
         }
         default: {
-            //cemuLog_log(LogType::Force, "Unknown LD Function: {:x}", command);
+            DEBUG_FUNCTION_LINE_ERR("Unknown LD Function: %02X", command);
             break;
         }
     }
@@ -651,6 +676,284 @@ void DimensionsToypad::GetChallengeResponse(std::span<const uint8_t, 8> buf, uin
 
     if (!m_isAwake)
         m_isAwake = true;
+}
+
+void DimensionsToypad::SetPadColor(std::span<const uint8_t, 4> buf, uint8_t sequence,
+                                   std::array<uint8_t, 32> &replyBuf) {
+    uint8_t pad = buf[0];
+    if (pad == 0) {
+        m_colorTop.red         = buf[1];
+        m_colorLeft.red        = buf[1];
+        m_colorRight.red       = buf[1];
+        m_colorTop.green       = buf[2];
+        m_colorLeft.green      = buf[2];
+        m_colorRight.green     = buf[2];
+        m_colorTop.blue        = buf[3];
+        m_colorLeft.blue       = buf[3];
+        m_colorRight.blue      = buf[3];
+        m_colorTop.colorType   = DimensionsColorType::COLOR;
+        m_colorLeft.colorType  = DimensionsColorType::COLOR;
+        m_colorRight.colorType = DimensionsColorType::COLOR;
+    } else if (pad == 1) {
+        m_colorTop.red         = buf[1];
+        m_colorTop.green       = buf[2];
+        m_colorTop.blue        = buf[3];
+        m_colorTop.colorType   = DimensionsColorType::COLOR;
+        m_colorLeft.colorType  = DimensionsColorType::NONE;
+        m_colorRight.colorType = DimensionsColorType::NONE;
+    } else if (pad == 2) {
+        m_colorLeft.red        = buf[1];
+        m_colorLeft.green      = buf[2];
+        m_colorLeft.blue       = buf[3];
+        m_colorLeft.colorType  = DimensionsColorType::COLOR;
+        m_colorTop.colorType   = DimensionsColorType::NONE;
+        m_colorRight.colorType = DimensionsColorType::NONE;
+    } else if (pad == 3) {
+        m_colorRight.red       = buf[1];
+        m_colorRight.green     = buf[2];
+        m_colorRight.blue      = buf[3];
+        m_colorRight.colorType = DimensionsColorType::COLOR;
+        m_colorTop.colorType   = DimensionsColorType::NONE;
+        m_colorLeft.colorType  = DimensionsColorType::NONE;
+    }
+    replyBuf    = {0x55, 0x01, sequence};
+    replyBuf[3] = GenerateChecksum(replyBuf, 3);
+}
+
+void DimensionsToypad::SetPadFade(std::span<const uint8_t, 6> buf, uint8_t sequence,
+                                  std::array<uint8_t, 32> &replyBuf) {
+    uint8_t pad = buf[0];
+    if (pad == 0) {
+        m_colorTop.speed       = buf[1];
+        m_colorLeft.speed      = buf[1];
+        m_colorRight.speed     = buf[1];
+        m_colorTop.cycles      = buf[2];
+        m_colorLeft.cycles     = buf[2];
+        m_colorRight.cycles    = buf[2];
+        m_colorTop.red         = buf[3];
+        m_colorLeft.red        = buf[3];
+        m_colorRight.red       = buf[3];
+        m_colorTop.green       = buf[4];
+        m_colorLeft.green      = buf[4];
+        m_colorRight.green     = buf[4];
+        m_colorTop.blue        = buf[5];
+        m_colorLeft.blue       = buf[5];
+        m_colorRight.blue      = buf[5];
+        m_colorTop.colorType   = DimensionsColorType::FADE;
+        m_colorLeft.colorType  = DimensionsColorType::FADE;
+        m_colorRight.colorType = DimensionsColorType::FADE;
+    } else if (pad == 1) {
+        m_colorTop.speed       = buf[1];
+        m_colorTop.cycles      = buf[2];
+        m_colorTop.red         = buf[3];
+        m_colorTop.green       = buf[4];
+        m_colorTop.blue        = buf[5];
+        m_colorTop.colorType   = DimensionsColorType::FADE;
+        m_colorLeft.colorType  = DimensionsColorType::NONE;
+        m_colorRight.colorType = DimensionsColorType::NONE;
+    } else if (pad == 2) {
+        m_colorLeft.speed      = buf[1];
+        m_colorLeft.cycles     = buf[2];
+        m_colorLeft.red        = buf[3];
+        m_colorLeft.green      = buf[4];
+        m_colorLeft.blue       = buf[5];
+        m_colorLeft.colorType  = DimensionsColorType::FADE;
+        m_colorTop.colorType   = DimensionsColorType::NONE;
+        m_colorRight.colorType = DimensionsColorType::NONE;
+    } else if (pad == 3) {
+        m_colorRight.speed     = buf[1];
+        m_colorRight.cycles    = buf[2];
+        m_colorRight.red       = buf[3];
+        m_colorRight.green     = buf[4];
+        m_colorRight.blue      = buf[5];
+        m_colorRight.colorType = DimensionsColorType::FADE;
+        m_colorTop.colorType   = DimensionsColorType::NONE;
+        m_colorLeft.colorType  = DimensionsColorType::NONE;
+    }
+    replyBuf    = {0x55, 0x01, sequence};
+    replyBuf[3] = GenerateChecksum(replyBuf, 3);
+}
+
+void DimensionsToypad::SetPadFlash(std::span<const uint8_t, 7> buf, uint8_t sequence,
+                                   std::array<uint8_t, 32> &replyBuf) {
+    uint8_t pad = buf[0];
+    if (pad == 0) {
+        m_colorTop.colorDuration   = buf[1];
+        m_colorLeft.colorDuration  = buf[1];
+        m_colorRight.colorDuration = buf[1];
+        m_colorTop.whiteDuration   = buf[2];
+        m_colorLeft.whiteDuration  = buf[2];
+        m_colorRight.whiteDuration = buf[2];
+        m_colorTop.cycles          = buf[3];
+        m_colorLeft.cycles         = buf[3];
+        m_colorRight.cycles        = buf[3];
+        m_colorTop.red             = buf[4];
+        m_colorLeft.red            = buf[4];
+        m_colorRight.red           = buf[4];
+        m_colorTop.green           = buf[5];
+        m_colorLeft.green          = buf[5];
+        m_colorRight.green         = buf[5];
+        m_colorTop.blue            = buf[6];
+        m_colorLeft.blue           = buf[6];
+        m_colorRight.blue          = buf[6];
+        m_colorTop.colorType       = DimensionsColorType::FLASH;
+        m_colorLeft.colorType      = DimensionsColorType::FLASH;
+        m_colorRight.colorType     = DimensionsColorType::FLASH;
+    } else if (pad == 1) {
+        m_colorTop.colorDuration = buf[1];
+        m_colorTop.whiteDuration = buf[2];
+        m_colorTop.cycles        = buf[3];
+        m_colorTop.red           = buf[4];
+        m_colorTop.green         = buf[5];
+        m_colorTop.blue          = buf[6];
+        m_colorTop.colorType     = DimensionsColorType::FLASH;
+        m_colorLeft.colorType    = DimensionsColorType::NONE;
+        m_colorRight.colorType   = DimensionsColorType::NONE;
+    } else if (pad == 2) {
+        m_colorLeft.colorDuration = buf[1];
+        m_colorLeft.whiteDuration = buf[2];
+        m_colorLeft.cycles        = buf[3];
+        m_colorLeft.red           = buf[4];
+        m_colorLeft.green         = buf[5];
+        m_colorLeft.blue          = buf[6];
+        m_colorLeft.colorType     = DimensionsColorType::FLASH;
+        m_colorTop.colorType      = DimensionsColorType::NONE;
+        m_colorRight.colorType    = DimensionsColorType::NONE;
+    } else if (pad == 3) {
+        m_colorRight.colorDuration = buf[1];
+        m_colorRight.whiteDuration = buf[2];
+        m_colorRight.cycles        = buf[3];
+        m_colorRight.red           = buf[4];
+        m_colorRight.green         = buf[5];
+        m_colorRight.blue          = buf[6];
+        m_colorRight.colorType     = DimensionsColorType::FLASH;
+        m_colorTop.colorType       = DimensionsColorType::NONE;
+        m_colorLeft.colorType      = DimensionsColorType::NONE;
+    }
+    replyBuf    = {0x55, 0x01, sequence};
+    replyBuf[3] = GenerateChecksum(replyBuf, 3);
+}
+
+void DimensionsToypad::SetFadeRandom(std::span<const uint8_t, 3> buf, uint8_t sequence,
+                                     std::array<uint8_t, 32> &replyBuf) {
+    uint8_t pad = buf[0];
+    if (pad == 0) {
+        m_colorTop.speed       = buf[1];
+        m_colorLeft.speed      = buf[1];
+        m_colorRight.speed     = buf[1];
+        m_colorTop.cycles      = buf[2];
+        m_colorLeft.cycles     = buf[2];
+        m_colorRight.cycles    = buf[2];
+        m_colorTop.red         = uint8_t(rand() % 255);
+        m_colorLeft.red        = uint8_t(rand() % 255);
+        m_colorRight.red       = uint8_t(rand() % 255);
+        m_colorTop.green       = uint8_t(rand() % 255);
+        m_colorLeft.green      = uint8_t(rand() % 255);
+        m_colorRight.green     = uint8_t(rand() % 255);
+        m_colorTop.blue        = uint8_t(rand() % 255);
+        m_colorLeft.blue       = uint8_t(rand() % 255);
+        m_colorRight.blue      = uint8_t(rand() % 255);
+        m_colorTop.colorType   = DimensionsColorType::FADE;
+        m_colorLeft.colorType  = DimensionsColorType::FADE;
+        m_colorRight.colorType = DimensionsColorType::FADE;
+    } else if (pad == 1) {
+        m_colorTop.speed       = buf[1];
+        m_colorTop.cycles      = buf[2];
+        m_colorTop.red         = uint8_t(rand() % 255);
+        m_colorTop.green       = uint8_t(rand() % 255);
+        m_colorTop.blue        = uint8_t(rand() % 255);
+        m_colorTop.colorType   = DimensionsColorType::FADE;
+        m_colorLeft.colorType  = DimensionsColorType::NONE;
+        m_colorRight.colorType = DimensionsColorType::NONE;
+    } else if (pad == 2) {
+        m_colorLeft.speed      = buf[1];
+        m_colorLeft.cycles     = buf[2];
+        m_colorLeft.red        = uint8_t(rand() % 255);
+        m_colorLeft.green      = uint8_t(rand() % 255);
+        m_colorLeft.blue       = uint8_t(rand() % 255);
+        m_colorLeft.colorType  = DimensionsColorType::FADE;
+        m_colorTop.colorType   = DimensionsColorType::NONE;
+        m_colorRight.colorType = DimensionsColorType::NONE;
+    } else if (pad == 3) {
+        m_colorRight.speed     = buf[1];
+        m_colorRight.cycles    = buf[2];
+        m_colorRight.red       = uint8_t(rand() % 255);
+        m_colorRight.green     = uint8_t(rand() % 255);
+        m_colorRight.blue      = uint8_t(rand() % 255);
+        m_colorRight.colorType = DimensionsColorType::FADE;
+        m_colorTop.colorType   = DimensionsColorType::NONE;
+        m_colorLeft.colorType  = DimensionsColorType::NONE;
+    }
+}
+
+void DimensionsToypad::SetFadeAll(std::span<const uint8_t, 18> buf, uint8_t sequence,
+                                  std::array<uint8_t, 32> &replyBuf) {
+    m_colorTop.speed       = buf[1];
+    m_colorTop.cycles      = buf[2];
+    m_colorTop.red         = buf[3];
+    m_colorTop.green       = buf[4];
+    m_colorTop.blue        = buf[5];
+    m_colorLeft.speed      = buf[7];
+    m_colorLeft.cycles     = buf[8];
+    m_colorLeft.red        = buf[9];
+    m_colorLeft.green      = buf[10];
+    m_colorLeft.blue       = buf[11];
+    m_colorRight.speed     = buf[13];
+    m_colorRight.cycles    = buf[14];
+    m_colorRight.red       = buf[15];
+    m_colorRight.green     = buf[16];
+    m_colorRight.blue      = buf[17];
+    m_colorTop.colorType   = DimensionsColorType::FADE;
+    m_colorLeft.colorType  = DimensionsColorType::FADE;
+    m_colorRight.colorType = DimensionsColorType::FADE;
+    replyBuf               = {0x55, 0x01, sequence};
+    replyBuf[3]            = GenerateChecksum(replyBuf, 3);
+}
+
+
+void DimensionsToypad::SetFlashAll(std::span<const uint8_t, 21> buf, uint8_t sequence,
+                                   std::array<uint8_t, 32> &replyBuf) {
+    m_colorTop.colorDuration   = buf[1];
+    m_colorTop.whiteDuration   = buf[2];
+    m_colorTop.cycles          = buf[3];
+    m_colorTop.red             = buf[4];
+    m_colorTop.green           = buf[5];
+    m_colorTop.blue            = buf[6];
+    m_colorLeft.colorDuration  = buf[8];
+    m_colorLeft.whiteDuration  = buf[9];
+    m_colorLeft.cycles         = buf[10];
+    m_colorLeft.red            = buf[11];
+    m_colorLeft.green          = buf[12];
+    m_colorLeft.blue           = buf[13];
+    m_colorRight.colorDuration = buf[15];
+    m_colorRight.whiteDuration = buf[16];
+    m_colorRight.cycles        = buf[17];
+    m_colorRight.red           = buf[18];
+    m_colorRight.green         = buf[19];
+    m_colorRight.blue          = buf[20];
+    m_colorTop.colorType       = DimensionsColorType::FLASH;
+    m_colorLeft.colorType      = DimensionsColorType::FLASH;
+    m_colorRight.colorType     = DimensionsColorType::FLASH;
+    replyBuf                   = {0x55, 0x01, sequence};
+    replyBuf[3]                = GenerateChecksum(replyBuf, 3);
+}
+
+void DimensionsToypad::SetColorAll(std::span<const uint8_t, 12> buf, uint8_t sequence,
+                                   std::array<uint8_t, 32> &replyBuf) {
+    m_colorTop.red         = buf[1];
+    m_colorTop.green       = buf[2];
+    m_colorTop.blue        = buf[3];
+    m_colorLeft.red        = buf[5];
+    m_colorRight.red       = buf[6];
+    m_colorLeft.green      = buf[7];
+    m_colorRight.green     = buf[9];
+    m_colorLeft.blue       = buf[10];
+    m_colorRight.blue      = buf[11];
+    m_colorTop.colorType   = DimensionsColorType::COLOR;
+    m_colorLeft.colorType  = DimensionsColorType::COLOR;
+    m_colorRight.colorType = DimensionsColorType::COLOR;
+    replyBuf               = {0x55, 0x01, sequence};
+    replyBuf[3]            = GenerateChecksum(replyBuf, 3);
 }
 
 void DimensionsToypad::QueryBlock(uint8_t index, uint8_t page,
@@ -1094,4 +1397,8 @@ std::array<std::optional<uint32_t>, 7> DimensionsToypad::GetCurrentFigures() {
         }
     }
     return currentFigures;
+}
+
+std::array<DimensionsToypad::DimensionsLEDColor, 3> DimensionsToypad::GetPadColors() {
+    return {m_colorTop, m_colorLeft, m_colorRight};
 }

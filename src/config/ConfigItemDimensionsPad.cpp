@@ -519,12 +519,14 @@ static void enterToypadMenu(ConfigItemDimensionsPad *item) {
         }
 
         if (buttonsTriggered & VPAD_BUTTON_X) {
-            uint8_t pad = derivePadFromIndex(currentIndex);
-            if (pad > 0) {
-                g_dimensionstoypad.RemoveFigure(pad, currentIndex, false);
-                item->figureFiles[currentIndex]   = std::nullopt;
-                item->figureNumbers[currentIndex] = std::nullopt;
-                redraw                            = true;
+            if (!item->moveIndex) {
+                uint8_t pad = derivePadFromIndex(currentIndex);
+                if (pad > 0) {
+                    g_dimensionstoypad.RemoveFigure(pad, currentIndex, true);
+                    item->figureFiles[currentIndex]   = std::nullopt;
+                    item->figureNumbers[currentIndex] = std::nullopt;
+                    redraw                            = true;
+                }
             }
         }
 
