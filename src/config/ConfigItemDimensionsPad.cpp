@@ -3,7 +3,6 @@
 */
 
 #include "ConfigItemDimensionsPad.hpp"
-#include "devices/Dimensions.h"
 #include "utils/DrawUtils.hpp"
 #include "utils/input.h"
 #include "utils/logger.h"
@@ -110,7 +109,7 @@ static uint8_t derivePadFromIndex(uint8_t index) {
         case 0:
         case 3:
         case 4:
-            return 1;
+            return 2;
 
         case 2:
         case 5:
@@ -118,7 +117,7 @@ static uint8_t derivePadFromIndex(uint8_t index) {
             return 3;
 
         case 1:
-            return 2;
+            return 1;
 
 
         default:
@@ -466,6 +465,154 @@ static void enterSelectionMenu(ConfigItemDimensionsPad *item, uint8_t index) {
     }
 }
 
+static bool toypadColorCompare(DimensionsToypad::DimensionsLEDColor a, DimensionsToypad::DimensionsLEDColor b) {
+    return a.red == b.red && a.green == b.green && a.blue == b.blue && a.colorType == b.colorType;
+}
+
+static bool toypadFadeCompare(DimensionsToypad::DimensionsLEDColor a, DimensionsToypad::DimensionsLEDColor b) {
+    return a.red == b.red && a.green == b.green && a.blue == b.blue && a.colorType == b.colorType && a.cycles == b.cycles && a.speed == b.speed;
+}
+
+static bool toypadFlashCompare(DimensionsToypad::DimensionsLEDColor a, DimensionsToypad::DimensionsLEDColor b) {
+    return a.red == b.red && a.green == b.green && a.blue == b.blue && a.colorType == b.colorType && a.cycles == b.cycles && a.whiteDuration == b.whiteDuration && a.colorDuration == b.colorDuration;
+}
+
+static void populateColorQueues(ConfigItemDimensionsPad *item) {
+    std::array<DimensionsToypad::DimensionsLEDColor, 3> colors = g_dimensionstoypad.GetPadColors();
+    if (colors[0].colorType == DimensionsToypad::DimensionsColorType::NONE && item->topPad.colorType != colors[0].colorType) {
+        item->topColors.push(COLOR_WHITE);
+    } else if (colors[0].colorType == DimensionsToypad::DimensionsColorType::COLOR && !toypadColorCompare(colors[0], item->topPad)) {
+        item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 255));
+    } else if (colors[0].colorType == DimensionsToypad::DimensionsColorType::FADE && !toypadFadeCompare(colors[0], item->topPad)) {
+        // set color and queue of colors to fade in and out
+        item->topColors = std::queue<Color>();
+        for (uint8_t i = 0; i < colors[0].cycles; i++) {
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 255));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 230));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 205));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 180));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 155));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 130));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 105));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 80));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 55));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 20));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 0));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 20));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 55));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 80));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 105));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 130));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 155));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 180));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 205));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 230));
+            item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 255));
+        }
+
+    } else if (colors[0].colorType == DimensionsToypad::DimensionsColorType::FLASH && !toypadFlashCompare(colors[0], item->topPad)) {
+        // set color and queue of colors to flash on and off
+        item->topColors = std::queue<Color>();
+        for (uint8_t i = 0; i < colors[0].cycles; i++) {
+            for (uint8_t j = 0; j < colors[0].colorDuration; j++) {
+                item->topColors.push(Color(colors[0].red, colors[0].green, colors[0].blue, 255));
+            }
+            for (uint8_t j = 0; j < colors[0].whiteDuration; j++) {
+                item->topColors.push(COLOR_WHITE);
+            }
+        }
+    }
+    if (colors[1].colorType == DimensionsToypad::DimensionsColorType::NONE && item->leftPad.colorType != colors[1].colorType) {
+        item->leftColors.push(COLOR_WHITE);
+    } else if (colors[1].colorType == DimensionsToypad::DimensionsColorType::COLOR && !toypadColorCompare(colors[1], item->leftPad)) {
+        item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 255));
+    } else if (colors[1].colorType == DimensionsToypad::DimensionsColorType::FADE && !toypadFadeCompare(colors[1], item->leftPad)) {
+        // set color and queue of colors to fade in and out
+        item->leftColors = std::queue<Color>();
+        for (uint8_t i = 0; i < colors[1].cycles; i++) {
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 255));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 230));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 205));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 180));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 155));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 130));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 105));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 80));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 55));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 20));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 0));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 20));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 55));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 80));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 105));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 130));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 155));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 180));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 205));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 230));
+            item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 255));
+        }
+
+    } else if (colors[1].colorType == DimensionsToypad::DimensionsColorType::FLASH && !toypadFlashCompare(colors[1], item->leftPad)) {
+        // set color and queue of colors to flash on and off
+        item->leftColors = std::queue<Color>();
+        for (uint8_t i = 0; i < colors[1].cycles; i++) {
+            for (uint8_t j = 0; j < colors[1].colorDuration; j++) {
+                item->leftColors.push(Color(colors[1].red, colors[1].green, colors[1].blue, 255));
+            }
+            for (uint8_t j = 0; j < colors[1].whiteDuration; j++) {
+                item->leftColors.push(COLOR_WHITE);
+            }
+        }
+    }
+    if (colors[2].colorType == DimensionsToypad::DimensionsColorType::NONE && item->rightPad.colorType != colors[2].colorType) {
+        item->rightColors.push(COLOR_WHITE);
+    } else if (colors[2].colorType == DimensionsToypad::DimensionsColorType::COLOR && !toypadColorCompare(colors[2], item->rightPad)) {
+        item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 255));
+    } else if (colors[2].colorType == DimensionsToypad::DimensionsColorType::FADE && !toypadFadeCompare(colors[2], item->rightPad)) {
+        // set color and queue of colors to fade in and out
+        item->rightColors = std::queue<Color>();
+        for (uint8_t i = 0; i < colors[2].cycles; i++) {
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 255));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 230));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 205));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 180));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 155));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 130));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 105));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 80));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 55));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 20));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 0));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 20));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 55));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 80));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 105));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 130));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 155));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 180));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 205));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 230));
+            item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 255));
+        }
+
+    } else if (colors[2].colorType == DimensionsToypad::DimensionsColorType::FLASH && !toypadFlashCompare(colors[2], item->rightPad)) {
+        // set color and queue of colors to flash on and off
+        item->rightColors = std::queue<Color>();
+        for (uint8_t i = 0; i < colors[2].cycles; i++) {
+            for (uint8_t j = 0; j < colors[2].colorDuration; j++) {
+                item->rightColors.push(Color(colors[2].red, colors[2].green, colors[2].blue, 255));
+            }
+            for (uint8_t j = 0; j < colors[2].whiteDuration; j++) {
+                item->rightColors.push(COLOR_WHITE);
+            }
+        }
+    }
+    item->topPad   = colors[0];
+    item->leftPad  = colors[1];
+    item->rightPad = colors[2];
+}
+
 static void enterToypadMenu(ConfigItemDimensionsPad *item) {
     // Init DrawUtils
     DrawUtils::initBuffers();
@@ -618,6 +765,26 @@ static void enterToypadMenu(ConfigItemDimensionsPad *item) {
             }
         }
 
+        populateColorQueues(item);
+
+        if (!item->topColors.empty()) {
+            item->topColor = item->topColors.front();
+            item->topColors.pop();
+            redraw = true;
+        }
+
+        if (!item->leftColors.empty()) {
+            item->leftColor = item->leftColors.front();
+            item->leftColors.pop();
+            redraw = true;
+        }
+
+        if (!item->rightColors.empty()) {
+            item->rightColor = item->rightColors.front();
+            item->rightColors.pop();
+            redraw = true;
+        }
+
         if (redraw) {
             DrawUtils::beginDraw();
             DrawUtils::clear(COLOR_BACKGROUND);
@@ -630,6 +797,15 @@ static void enterToypadMenu(ConfigItemDimensionsPad *item) {
             DrawUtils::setFontSize(18);
             DrawUtils::print(SCREEN_WIDTH - 16, 8 + 24, "Toypad View", true);
             DrawUtils::drawRectFilled(8, 8 + 24 + 4, SCREEN_WIDTH - 8 * 2, 3, COLOR_BLACK);
+
+            // Draw Slot Backgrounds
+            DrawUtils::drawRectFilled(32, 80, 150, 120, item->leftColor);
+            DrawUtils::drawRectFilled(352, 80, 150, 120, item->topColor);
+            DrawUtils::drawRectFilled(672, 80, 150, 120, item->rightColor);
+            DrawUtils::drawRectFilled(32, 280, 150, 120, item->leftColor);
+            DrawUtils::drawRectFilled(192, 280, 150, 120, item->leftColor);
+            DrawUtils::drawRectFilled(512, 280, 150, 120, item->rightColor);
+            DrawUtils::drawRectFilled(672, 280, 150, 120, item->rightColor);
 
             // Draw Dimension Slots
             if (currentIndex == 0) {

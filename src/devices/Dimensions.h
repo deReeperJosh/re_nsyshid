@@ -150,6 +150,7 @@ private:
     uint32_t m_randomD;
 
     bool m_isAwake = false;
+    bool m_wasLastRespFigure = false;
 
     std::queue<std::array<uint8_t, 32>> m_figureAddedRemovedResponses;
     std::queue<std::array<uint8_t, 32>> m_queries;

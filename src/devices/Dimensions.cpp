@@ -520,11 +520,13 @@ std::array<uint8_t, 32> DimensionsToypad::GetStatus() {
             response = m_queries.front();
             m_queries.pop();
             responded = true;
-        } else if (!m_figureAddedRemovedResponses.empty() && m_isAwake) {
+            m_wasLastRespFigure = false;
+        } else if (!m_figureAddedRemovedResponses.empty() && m_isAwake && !m_wasLastRespFigure) {
             std::lock_guard lock(m_dimensionsMutex);
             response = m_figureAddedRemovedResponses.front();
             m_figureAddedRemovedResponses.pop();
             responded = true;
+            m_wasLastRespFigure = true;
         } else {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
