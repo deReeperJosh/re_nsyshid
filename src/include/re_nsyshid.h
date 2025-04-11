@@ -14,9 +14,10 @@ enum EmulationStatus {
 };
 
 enum DeviceToEmulate {
-    NONE      = 0,
-    SKYLANDER = 1,
-    INFINITY  = 2
+    NONE       = 0,
+    SKYLANDER  = 1,
+    INFINITY   = 2,
+    DIMENSIONS = 3
 };
 
 void ResetClientLibrary();
