@@ -10,6 +10,7 @@
 #include <wups/config/WUPSConfigItemStub.h>
 #include <wups/config_api.h>
 
+#include "config/ConfigItemDimensionsPad.hpp"
 #include "config/ConfigItemSelectInfinity.hpp"
 #include "config/ConfigItemSelectSkylander.hpp"
 #include "re_nsyshid.h"
@@ -78,6 +79,11 @@ static void skylanderSelectedCallback(ConfigItemSelectSkylander *skylanders, con
 static void infinityToySelectedCallback(ConfigItemSelectInfinity *infinity, const char *filePath, uint8_t slot) {
     DEBUG_FUNCTION_LINE_INFO("New infinity toy selected: %d for %s", slot, filePath);
     WUPSStorageAPI_StoreString(nullptr, ("currentInfinityPath" + std::to_string(slot)).c_str(), filePath);
+}
+
+static void dimensionsFigureSelectedCallback(ConfigItemDimensionsPad *dimensions, const char *filePath, uint8_t index) {
+    DEBUG_FUNCTION_LINE_INFO("New dimensions toy selected: %d for %s", index, filePath);
+    WUPSStorageAPI_StoreString(nullptr, ("currentDimensions" + std::to_string(index)).c_str(), filePath);
 }
 
 WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle rootHandle) {
@@ -164,7 +170,11 @@ WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle ro
         ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "p2_ability_two", "Ability Two (P2)", 8, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
 
         root.add(std::move(infinityCategory));
-        // root.add(WUPSConfigCategory::Create("Dimensions Manager"));
+
+        auto dimensionsCategory = WUPSConfigCategory::Create("Dimensions Manager");
+        ConfigItemDimensionsPad_AddToCategory(dimensionsCategory.getHandle(), "dimensions_toypad", "Dimensions Toypad", TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), dimensionsFigureSelectedCallback);
+
+        root.add(std::move(dimensionsCategory));
     } catch (std::exception &e) {
         DEBUG_FUNCTION_LINE_ERR("Creating config menu failed: %s", e.what());
         return WUPSCONFIG_API_CALLBACK_RESULT_ERROR;

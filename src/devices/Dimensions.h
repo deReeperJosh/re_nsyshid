@@ -90,6 +90,8 @@ public:
     static std::map<const uint32_t, const char *> GetListTokens();
     std::string FindFigure(uint32_t figNum);
 
+    std::array<std::optional<uint32_t>, 7> GetCurrentFigures();
+
 protected:
     std::mutex m_dimensionsMutex;
     std::array<DimensionsMini, 7> m_figures{};

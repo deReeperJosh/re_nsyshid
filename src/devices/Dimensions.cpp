@@ -1082,3 +1082,16 @@ std::string DimensionsToypad::FindFigure(uint32_t figNum) {
     }
     return std::format("Unknown ({})", figNum);
 }
+
+std::array<std::optional<uint32_t>, 7> DimensionsToypad::GetCurrentFigures() {
+    std::array<std::optional<uint32_t>, 7> currentFigures = {};
+    for (uint8_t i = 0; i < 7; i++) {
+        const DimensionsMini &figure = GetFigureByIndex(i);
+        if (figure.index != 255) {
+            currentFigures[i] = figure.id;
+        } else {
+            currentFigures[i] = std::nullopt;
+        }
+    }
+    return currentFigures;
+}
