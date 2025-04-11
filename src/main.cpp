@@ -10,6 +10,7 @@
 #include <wups/config/WUPSConfigItemStub.h>
 #include <wups/config_api.h>
 
+#include "config/ConfigItemDimensionsPad.hpp"
 #include "config/ConfigItemSelectInfinity.hpp"
 #include "config/ConfigItemSelectSkylander.hpp"
 #include "re_nsyshid.h"
@@ -49,53 +50,12 @@ WUPS_PLUGIN_LICENSE("GPLv2");
 WUPS_USE_WUT_DEVOPTAB();        // Use the wut devoptabs
 WUPS_USE_STORAGE("re_nsyshid"); // Unique id for the storage api
 
-enum ExampleOptions {
-    EXAMPLE_OPTION_1 = 0,
-    EXAMPLE_OPTION_2 = 1,
-    EXAMPLE_OPTION_3 = 2,
-};
-
-#define LOF_FS_OPEN_DEFAULT_VALUE      true
-#define INTEGER_RANGE_DEFAULT_VALUE    10
 #define EMULATION_STATUS_DEFAULT_VALUE DISABLED
 #define EMULATED_DEVICE_DEFAULT_VALUE  NONE
 
-bool sLogFSOpen                  = LOF_FS_OPEN_DEFAULT_VALUE;
-int sIntegerRangeValue           = INTEGER_RANGE_DEFAULT_VALUE;
 EmulationStatus sEmulationStatus = EMULATION_STATUS_DEFAULT_VALUE;
 DeviceToEmulate sEmulatedDevice  = EMULATED_DEVICE_DEFAULT_VALUE;
 
-static WUPSButtonCombo_ComboHandle sPressDownExampleHandle(nullptr);
-static WUPSButtonCombo_ComboHandle sHoldExampleHandle(nullptr);
-
-WUPSButtonCombo_Buttons DEFAULT_PRESS_DOWN_BUTTON_COMBO = WUPS_BUTTON_COMBO_BUTTON_L | WUPS_BUTTON_COMBO_BUTTON_R;
-WUPSButtonCombo_Buttons DEFAULT_PRESS_HOLD_COMBO        = WUPS_BUTTON_COMBO_BUTTON_L | WUPS_BUTTON_COMBO_BUTTON_R | WUPS_BUTTON_COMBO_BUTTON_DOWN;
-
-/**
- * Callback that will be called if the config has been changed
- */
-void boolItemChanged(ConfigItemBoolean *item, bool newValue) {
-    DEBUG_FUNCTION_LINE_INFO("New value in boolItemChanged: %d", newValue);
-    if (std::string_view(LOG_FS_OPEN_CONFIG_ID) == item->identifier) {
-        sLogFSOpen = newValue;
-        // If the value has changed, we store it in the storage.
-        WUPSStorageAPI::Store(item->identifier, newValue);
-    } else if (std::string_view(OTHER_EXAMPLE_BOOL_CONFIG_ID) == item->identifier) {
-        DEBUG_FUNCTION_LINE_ERR("Other bool value has changed to %d", newValue);
-    } else if (std::string_view(OTHER_EXAMPLE2_BOOL_CONFIG_ID) == item->identifier) {
-        DEBUG_FUNCTION_LINE_ERR("Other2 bool value has changed to %d", newValue);
-    }
-}
-
-void integerRangeItemChanged(ConfigItemIntegerRange *item, int newValue) {
-    DEBUG_FUNCTION_LINE_INFO("New value in integerRangeItemChanged: %d", newValue);
-    // If the value has changed, we store it in the storage.
-    if (std::string_view(LOG_FS_OPEN_CONFIG_ID) == item->identifier) {
-        sIntegerRangeValue = newValue;
-        // If the value has changed, we store it in the storage.
-        WUPSStorageAPI::Store(item->identifier, newValue);
-    }
-}
 
 void multipleValueItemChanged(ConfigItemMultipleValues *item, uint32_t newValue) {
     DEBUG_FUNCTION_LINE_INFO("New value in emulationStatus: %d", newValue);
@@ -111,10 +71,6 @@ void multipleValueItemChanged(ConfigItemMultipleValues *item, uint32_t newValue)
     }
 }
 
-void buttonComboItemChanged(ConfigItemButtonCombo *item, uint32_t newValue) {
-    DEBUG_FUNCTION_LINE_INFO("New value in buttonComboItemChanged: %d for %s", newValue, item->identifier);
-}
-
 static void skylanderSelectedCallback(ConfigItemSelectSkylander *skylanders, const char *filePath, uint8_t slot) {
     DEBUG_FUNCTION_LINE_INFO("New skylander selected: %d for %s", slot, filePath);
     WUPSStorageAPI_StoreString(nullptr, ("currentSkylanderPath" + std::to_string(slot)).c_str(), filePath);
@@ -123,6 +79,11 @@ static void skylanderSelectedCallback(ConfigItemSelectSkylander *skylanders, con
 static void infinityToySelectedCallback(ConfigItemSelectInfinity *infinity, const char *filePath, uint8_t slot) {
     DEBUG_FUNCTION_LINE_INFO("New infinity toy selected: %d for %s", slot, filePath);
     WUPSStorageAPI_StoreString(nullptr, ("currentInfinityPath" + std::to_string(slot)).c_str(), filePath);
+}
+
+static void dimensionsFigureSelectedCallback(ConfigItemDimensionsPad *dimensions, const char *filePath, uint8_t index) {
+    DEBUG_FUNCTION_LINE_INFO("New dimensions toy selected: %d for %s", index, filePath);
+    WUPSStorageAPI_StoreString(nullptr, ("currentDimensions" + std::to_string(index)).c_str(), filePath);
 }
 
 WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle rootHandle) {
@@ -169,6 +130,7 @@ WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle ro
                 {NONE, "No Device Connected"},
                 {SKYLANDER, "Emulate Skylander Portal"},
                 {INFINITY, "Emulate Infinity Base"},
+                {DIMENSIONS, "Emulate Dimensions Toypad"},
         };
 
         root.add(WUPSConfigItemMultipleValues::CreateFromValue(EMULATED_DEVICE_CONFIG_ID, "Device to Emulate",
@@ -208,7 +170,11 @@ WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle ro
         ConfigItemSelectInfinity_AddToCategory(infinityCategory.getHandle(), "p2_ability_two", "Ability Two (P2)", 8, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), infinityToySelectedCallback);
 
         root.add(std::move(infinityCategory));
-        // root.add(WUPSConfigCategory::Create("Dimensions Manager"));
+
+        auto dimensionsCategory = WUPSConfigCategory::Create("Dimensions Manager");
+        ConfigItemDimensionsPad_AddToCategory(dimensionsCategory.getHandle(), "dimensions_toypad", "Dimensions Toypad", TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), dimensionsFigureSelectedCallback);
+
+        root.add(std::move(dimensionsCategory));
     } catch (std::exception &e) {
         DEBUG_FUNCTION_LINE_ERR("Creating config menu failed: %s", e.what());
         return WUPSCONFIG_API_CALLBACK_RESULT_ERROR;
