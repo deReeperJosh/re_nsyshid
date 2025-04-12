@@ -1,6 +1,6 @@
 # re_nsyshid
 
-re_nsyshid is a Wii U Plugin which allows end users to emulate USB peripheral devices
+re_nsyshid is a Wii U Plugin which allows end users to emulate Toys to Life USB peripheral devices such as the Skylander Portal of Power, the Disney Infinity Base and the LEGO Dimensions Toypad.
 
 Requires the [Aroma](https://github.com/wiiu-env/Aroma) environment.  
 
@@ -24,7 +24,7 @@ Includes some code repurposed from the [re_nfpii](https://github.com/GaryOderNic
 
 ## Planned features
 
-In future releases, more USB devices are planned to be supported - such as the Disney Infinity Base, Lego Dimensions Toypad and Kamen Rider Ride Gate
+In future releases, more USB devices are planned to be supported - such as the Kamen Rider Ride Gate
 
 ## Building
 
