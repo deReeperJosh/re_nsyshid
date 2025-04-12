@@ -736,6 +736,7 @@ InfinityBase::LoadFigure(const std::array<uint8_t, INF_FIGURE_SIZE> &buf,
 
         position = DeriveFigurePosition(position);
         if (position == 0) {
+            fclose(inFile);
             return 0;
         }
 
