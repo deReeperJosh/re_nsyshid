@@ -148,12 +148,12 @@ const std::map<const uint32_t, const std::pair<const uint8_t, const char *>> s_l
         {0x1E84E9, {2, "Stitch's Tropical Rescue"}},
         {0x1E84EA, {2, "Brave Forest Siege"}},
         {0x1E8548, {3, "Inside Out Play Set"}},
-        {0x1E8549, {3, "Star Wars: Twilight of the Republic Play Set"}},
-        {0x1E854A, {3, "Star Wars: Rise Against the Empire Play Set"}},
-        {0x1E854B, {3, "Star Wars: The Force Awakens Play Set"}},
-        {0x1E854C, {3, "Marvel Battlegrounds Play Set"}},
-        {0x1E854D, {3, "Toy Box Speedway"}},
-        {0x1E854E, {3, "Toy Box Takeover"}},
+        {0x1E854A, {3, "Star Wars: Twilight of the Republic Play Set"}},
+        {0x1E854B, {3, "Star Wars: Rise Against the Empire Play Set"}},
+        {0x1E854C, {3, "Star Wars: The Force Awakens Play Set"}},
+        {0x1E854D, {3, "Marvel Battlegrounds Play Set"}},
+        {0x1E854E, {3, "Toy Box Speedway"}},
+        {0x1E854F, {3, "Toy Box Takeover"}},
         {0x1E85AC, {3, "Finding Dory Play Set"}},
         {0x2DC6C3, {1, "Bolt's Super Strength"}},
         {0x2DC6C4, {1, "Ralph's Power of Destruction"}},
@@ -715,28 +715,40 @@ InfinityBase::LoadFigure(const std::array<uint8_t, INF_FIGURE_SIZE> &buf,
     uint32_t number = uint32_t(infinity_decrypted_block[1]) << 16 | uint32_t(infinity_decrypted_block[2]) << 8 |
                       uint32_t(infinity_decrypted_block[3]);
 
-    InfinityFigure &figure = m_figures[position];
+    if ((position == 0 &&
+         ((number > 0x1E8480 && number < 0x2DC6BF) || (number > 0x3D0900 && number < 0x4C4B3F))) ||
+        ((position == 1 || position == 2) && (number > 0x3D0900 && number < 0x4C4B3F)) ||
+        ((position == 3 || position == 6) && number < 0x1E847F) ||
+        ((position == 4 || position == 5 || position == 7 || position == 8) &&
+         (number > 0x2DC6C0 && number < 0x3D08FF))) {
 
-    figure.infFile = std::move(inFile);
-    figure.figNum  = number;
-    memcpy(figure.data.data(), buf.data(), figure.data.size());
-    figure.present = true;
-    if (figure.orderAdded == 255) {
-        figure.orderAdded = m_figureOrder;
-        m_figureOrder++;
-    }
-    orderAdded = figure.orderAdded;
+        InfinityFigure &figure = m_figures[position];
 
-    position = DeriveFigurePosition(position);
-    if (position == 0) {
+        figure.infFile = std::move(inFile);
+        figure.figNum  = number;
+        memcpy(figure.data.data(), buf.data(), figure.data.size());
+        figure.present = true;
+        if (figure.orderAdded == 255) {
+            figure.orderAdded = m_figureOrder;
+            m_figureOrder++;
+        }
+        orderAdded = figure.orderAdded;
+
+        position = DeriveFigurePosition(position);
+        if (position == 0) {
+            fclose(inFile);
+            return 0;
+        }
+
+        std::array<uint8_t, 32> figureChangeResponse = {0xab, 0x04, position, 0x09, orderAdded, 0x00};
+        figureChangeResponse[6]                      = GenerateChecksum(figureChangeResponse, 6);
+        m_figureAddedRemovedResponses.push(figureChangeResponse);
+
+        return number;
+    } else {
+        fclose(inFile);
         return 0;
     }
-
-    std::array<uint8_t, 32> figureChangeResponse = {0xab, 0x04, position, 0x09, orderAdded, 0x00};
-    figureChangeResponse[6]                      = GenerateChecksum(figureChangeResponse, 6);
-    m_figureAddedRemovedResponses.push(figureChangeResponse);
-
-    return number;
 }
 
 std::pair<uint8_t, std::string> InfinityBase::FindFigure(uint32_t figNum) {
