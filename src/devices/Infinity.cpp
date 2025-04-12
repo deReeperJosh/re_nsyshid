@@ -715,28 +715,39 @@ InfinityBase::LoadFigure(const std::array<uint8_t, INF_FIGURE_SIZE> &buf,
     uint32_t number = uint32_t(infinity_decrypted_block[1]) << 16 | uint32_t(infinity_decrypted_block[2]) << 8 |
                       uint32_t(infinity_decrypted_block[3]);
 
-    InfinityFigure &figure = m_figures[position];
+    if ((position == 0 &&
+         ((number > 0x1E8480 && number < 0x2DC6BF) || (number > 0x3D0900 && number < 0x4C4B3F))) ||
+        ((position == 1 || position == 2) && (number > 0x3D0900 && number < 0x4C4B3F)) ||
+        ((position == 3 || position == 6) && number < 0x1E847F) ||
+        ((position == 4 || position == 5 || position == 7 || position == 8) &&
+         (number > 0x2DC6C0 && number < 0x3D08FF))) {
 
-    figure.infFile = std::move(inFile);
-    figure.figNum  = number;
-    memcpy(figure.data.data(), buf.data(), figure.data.size());
-    figure.present = true;
-    if (figure.orderAdded == 255) {
-        figure.orderAdded = m_figureOrder;
-        m_figureOrder++;
-    }
-    orderAdded = figure.orderAdded;
+        InfinityFigure &figure = m_figures[position];
 
-    position = DeriveFigurePosition(position);
-    if (position == 0) {
+        figure.infFile = std::move(inFile);
+        figure.figNum  = number;
+        memcpy(figure.data.data(), buf.data(), figure.data.size());
+        figure.present = true;
+        if (figure.orderAdded == 255) {
+            figure.orderAdded = m_figureOrder;
+            m_figureOrder++;
+        }
+        orderAdded = figure.orderAdded;
+
+        position = DeriveFigurePosition(position);
+        if (position == 0) {
+            return 0;
+        }
+
+        std::array<uint8_t, 32> figureChangeResponse = {0xab, 0x04, position, 0x09, orderAdded, 0x00};
+        figureChangeResponse[6]                      = GenerateChecksum(figureChangeResponse, 6);
+        m_figureAddedRemovedResponses.push(figureChangeResponse);
+
+        return number;
+    } else {
+        fclose(inFile);
         return 0;
     }
-
-    std::array<uint8_t, 32> figureChangeResponse = {0xab, 0x04, position, 0x09, orderAdded, 0x00};
-    figureChangeResponse[6]                      = GenerateChecksum(figureChangeResponse, 6);
-    m_figureAddedRemovedResponses.push(figureChangeResponse);
-
-    return number;
 }
 
 std::pair<uint8_t, std::string> InfinityBase::FindFigure(uint32_t figNum) {
