@@ -519,13 +519,13 @@ std::array<uint8_t, 32> DimensionsToypad::GetStatus() {
         if (!m_queries.empty()) {
             response = m_queries.front();
             m_queries.pop();
-            responded = true;
+            responded           = true;
             m_wasLastRespFigure = false;
         } else if (!m_figureAddedRemovedResponses.empty() && m_isAwake && !m_wasLastRespFigure) {
             std::lock_guard lock(m_dimensionsMutex);
             response = m_figureAddedRemovedResponses.front();
             m_figureAddedRemovedResponses.pop();
-            responded = true;
+            responded           = true;
             m_wasLastRespFigure = true;
         } else {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -1278,8 +1278,8 @@ std::array<uint8_t, 4> DimensionsToypad::DimensionsRandomize(const std::vector<u
     for (uint8_t i = 0; i < count; i++) {
         const uint32_t v4 = std::rotr(scrambled, 25);
         const uint32_t v5 = std::rotr(scrambled, 10);
-        const uint32_t b = uint32_t(key[i * 4]) | (uint32_t(key[(i * 4) + 1]) << 8) | (uint32_t(key[(i * 4) + 2]) << 16) | (uint32_t(key[(i * 4) + 3]) << 24);
-        scrambled        = b + v4 + v5 - scrambled;
+        const uint32_t b  = uint32_t(key[i * 4]) | (uint32_t(key[(i * 4) + 1]) << 8) | (uint32_t(key[(i * 4) + 2]) << 16) | (uint32_t(key[(i * 4) + 3]) << 24);
+        scrambled         = b + v4 + v5 - scrambled;
     }
     return {uint8_t(scrambled & 0xFF), uint8_t(scrambled >> 8 & 0xFF), uint8_t(scrambled >> 16 & 0xFF), uint8_t(scrambled >> 24 & 0xFF)};
 }
