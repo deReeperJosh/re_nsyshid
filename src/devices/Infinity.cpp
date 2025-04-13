@@ -745,10 +745,9 @@ InfinityBase::LoadFigure(const std::array<uint8_t, INF_FIGURE_SIZE> &buf,
         m_figureAddedRemovedResponses.push(figureChangeResponse);
 
         return number;
-    } else {
-        fclose(inFile);
-        return 0;
     }
+    fclose(inFile);
+    return 0;
 }
 
 std::pair<uint8_t, std::string> InfinityBase::FindFigure(uint32_t figNum) {

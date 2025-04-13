@@ -638,10 +638,8 @@ void DimensionsToypad::GenerateRandomNumber(std::span<const uint8_t, 8> buf, uin
     // Decrypt payload into an 8 byte array
     std::array<uint8_t, 8> value = Decrypt(buf, std::nullopt);
     // Seed is the first 4 bytes (little endian) of the decrypted payload
-    //uint32_t seed = (uint32_t &) value[0];
     uint32_t seed = uint32_t(value[0]) | (uint32_t(value[1]) << 8) | (uint32_t(value[2]) << 16) | (uint32_t(value[3]) << 24);
     // Confirmation is the second 4 bytes (big endian) of the decrypted payload
-    //uint32_t conf = (uint32be &) value[4];
     // Initialize rng using the seed from decrypted payload
     InitializeRNG(seed);
     // Encrypt 8 bytes, first 4 bytes is the decrypted confirmation from payload, 2nd 4 bytes are blank
@@ -660,7 +658,6 @@ void DimensionsToypad::GetChallengeResponse(std::span<const uint8_t, 8> buf, uin
     // Decrypt payload into an 8 byte array
     std::array<uint8_t, 8> value = Decrypt(buf, std::nullopt);
     // Confirmation is the first 4 bytes of the decrypted payload
-    //uint32_t conf = (uint32be &) value[0];
     // Generate next random number based on RNG
     uint32_t nextRandom = GetNext();
     // Encrypt an 8 byte array, first 4 bytes are the next random number (little endian)
@@ -998,7 +995,6 @@ void DimensionsToypad::WriteBlock(uint8_t index, uint8_t page, std::span<const u
             // Id is written to page 36
             if (page == 36) {
                 figure.id = uint32_t(toWriteBuf[0]) | (uint32_t(toWriteBuf[1]) << 8) | (uint32_t(toWriteBuf[2]) << 16) | (uint32_t(toWriteBuf[3]) << 24);
-                //figure.id = (uint32_t &) toWriteBuf[0];
             }
             std::memcpy(figure.data.data() + (page * 4), toWriteBuf.data(), 4);
             figure.Save();
@@ -1012,7 +1008,6 @@ void DimensionsToypad::GetModel(std::span<const uint8_t, 8> buf, uint8_t sequenc
     // Decrypt payload to 8 byte array, byte 1 is the index, 4-7 are the confirmation
     std::array<uint8_t, 8> value = Decrypt(buf, std::nullopt);
     uint8_t index                = value[0];
-    //uint32_t conf                = (uint32be &) value[4];
     // Response is the figure's id (little endian) followed by the confirmation from payload
     // Index from game begins at 1 rather than 0, so minus 1 here
     std::array<uint8_t, 8> valueToEncrypt = {};
@@ -1157,9 +1152,7 @@ uint32_t DimensionsToypad::GetNext() {
 
 std::array<uint8_t, 8> DimensionsToypad::Decrypt(std::span<const uint8_t, 8> buf, std::optional<std::array<uint8_t, 16>> key) {
     // Value to decrypt is separated in to two little endian 32 bit unsigned integers
-    // uint32_t dataOne = (uint32_t &) buf[0];
     uint32_t dataOne = uint32_t(buf[0]) | (uint32_t(buf[1]) << 8) | (uint32_t(buf[2]) << 16) | (uint32_t(buf[3]) << 24);
-    // uint32_t dataTwo = (uint32_t &) buf[4];
     uint32_t dataTwo = uint32_t(buf[4]) | (uint32_t(buf[5]) << 8) | (uint32_t(buf[6]) << 16) | (uint32_t(buf[7]) << 24);
 
     // Use the key as 4 32 bit little endian unsigned integers
@@ -1169,19 +1162,11 @@ std::array<uint8_t, 8> DimensionsToypad::Decrypt(std::span<const uint8_t, 8> buf
     uint32_t keyFour;
 
     if (key) {
-        // keyOne   = (uint32_t &) key.value()[0];
-        // keyTwo   = (uint32_t &) key.value()[4];
-        // keyThree = (uint32_t &) key.value()[8];
-        // keyFour  = (uint32_t &) key.value()[12];
         keyOne   = uint32_t(key.value()[0]) | (uint32_t(key.value()[1]) << 8) | (uint32_t(key.value()[2]) << 16) | (uint32_t(key.value()[3]) << 24);
         keyTwo   = uint32_t(key.value()[4]) | (uint32_t(key.value()[5]) << 8) | (uint32_t(key.value()[6]) << 16) | (uint32_t(key.value()[7]) << 24);
         keyThree = uint32_t(key.value()[8]) | (uint32_t(key.value()[9]) << 8) | (uint32_t(key.value()[10]) << 16) | (uint32_t(key.value()[11]) << 24);
         keyFour  = uint32_t(key.value()[12]) | (uint32_t(key.value()[13]) << 8) | (uint32_t(key.value()[14]) << 16) | (uint32_t(key.value()[15]) << 24);
     } else {
-        // keyOne   = (uint32_t &) COMMAND_KEY[0];
-        // keyTwo   = (uint32_t &) COMMAND_KEY[4];
-        // keyThree = (uint32_t &) COMMAND_KEY[8];
-        // keyFour  = (uint32_t &) COMMAND_KEY[12];
         keyOne   = uint32_t(COMMAND_KEY[0]) | (uint32_t(COMMAND_KEY[1]) << 8) | (uint32_t(COMMAND_KEY[2]) << 16) | (uint32_t(COMMAND_KEY[3]) << 24);
         keyTwo   = uint32_t(COMMAND_KEY[4]) | (uint32_t(COMMAND_KEY[5]) << 8) | (uint32_t(COMMAND_KEY[6]) << 16) | (uint32_t(COMMAND_KEY[7]) << 24);
         keyThree = uint32_t(COMMAND_KEY[8]) | (uint32_t(COMMAND_KEY[9]) << 8) | (uint32_t(COMMAND_KEY[10]) << 16) | (uint32_t(COMMAND_KEY[11]) << 24);
@@ -1206,9 +1191,7 @@ std::array<uint8_t, 8> DimensionsToypad::Decrypt(std::span<const uint8_t, 8> buf
 
 std::array<uint8_t, 8> DimensionsToypad::Encrypt(std::span<const uint8_t, 8> buf, std::optional<std::array<uint8_t, 16>> key) {
     // Value to encrypt is separated in to two little endian 32 bit unsigned integers
-    // uint32_t dataOne = (uint32_t &) buf[0];
     uint32_t dataOne = uint32_t(buf[0]) | (uint32_t(buf[1]) << 8) | (uint32_t(buf[2]) << 16) | (uint32_t(buf[3]) << 24);
-    // uint32_t dataTwo = (uint32_t &) buf[4];
     uint32_t dataTwo = uint32_t(buf[4]) | (uint32_t(buf[5]) << 8) | (uint32_t(buf[6]) << 16) | (uint32_t(buf[7]) << 24);
 
     // Use the key as 4 32 bit little endian unsigned integers
@@ -1218,19 +1201,11 @@ std::array<uint8_t, 8> DimensionsToypad::Encrypt(std::span<const uint8_t, 8> buf
     uint32_t keyFour;
 
     if (key) {
-        // keyOne   = (uint32_t &) key.value()[0];
-        // keyTwo   = (uint32_t &) key.value()[4];
-        // keyThree = (uint32_t &) key.value()[8];
-        // keyFour  = (uint32_t &) key.value()[12];
         keyOne   = uint32_t(key.value()[0]) | (uint32_t(key.value()[1]) << 8) | (uint32_t(key.value()[2]) << 16) | (uint32_t(key.value()[3]) << 24);
         keyTwo   = uint32_t(key.value()[4]) | (uint32_t(key.value()[5]) << 8) | (uint32_t(key.value()[6]) << 16) | (uint32_t(key.value()[7]) << 24);
         keyThree = uint32_t(key.value()[8]) | (uint32_t(key.value()[9]) << 8) | (uint32_t(key.value()[10]) << 16) | (uint32_t(key.value()[11]) << 24);
         keyFour  = uint32_t(key.value()[12]) | (uint32_t(key.value()[13]) << 8) | (uint32_t(key.value()[14]) << 16) | (uint32_t(key.value()[15]) << 24);
     } else {
-        // keyOne   = (uint32_t &) COMMAND_KEY[0];
-        // keyTwo   = (uint32_t &) COMMAND_KEY[4];
-        // keyThree = (uint32_t &) COMMAND_KEY[8];
-        // keyFour  = (uint32_t &) COMMAND_KEY[12];
         keyOne   = uint32_t(COMMAND_KEY[0]) | (uint32_t(COMMAND_KEY[1]) << 8) | (uint32_t(COMMAND_KEY[2]) << 16) | (uint32_t(COMMAND_KEY[3]) << 24);
         keyTwo   = uint32_t(COMMAND_KEY[4]) | (uint32_t(COMMAND_KEY[5]) << 8) | (uint32_t(COMMAND_KEY[6]) << 16) | (uint32_t(COMMAND_KEY[7]) << 24);
         keyThree = uint32_t(COMMAND_KEY[8]) | (uint32_t(COMMAND_KEY[9]) << 8) | (uint32_t(COMMAND_KEY[10]) << 16) | (uint32_t(COMMAND_KEY[11]) << 24);
@@ -1284,7 +1259,6 @@ uint32_t DimensionsToypad::Scramble(const std::array<uint8_t, 7> &uid, uint8_t c
 
     std::array<uint8_t, 4> randomized = DimensionsRandomize(toScramble, count);
 
-    // return (uint32be &) randomized[0];
     return (uint32_t(randomized[0]) << 24) | (uint32_t(randomized[1]) << 16) | (uint32_t(randomized[2]) << 8) | uint32_t(randomized[3]);
 }
 
@@ -1304,7 +1278,6 @@ std::array<uint8_t, 4> DimensionsToypad::DimensionsRandomize(const std::vector<u
     for (uint8_t i = 0; i < count; i++) {
         const uint32_t v4 = std::rotr(scrambled, 25);
         const uint32_t v5 = std::rotr(scrambled, 10);
-        //const uint32_t b  = (uint32_t &) key[i * 4];
         const uint32_t b = uint32_t(key[i * 4]) | (uint32_t(key[(i * 4) + 1]) << 8) | (uint32_t(key[(i * 4) + 2]) << 16) | (uint32_t(key[(i * 4) + 3]) << 24);
         scrambled        = b + v4 + v5 - scrambled;
     }
@@ -1318,7 +1291,6 @@ uint32_t DimensionsToypad::GetFigureId(const std::array<uint8_t, 0x2D * 0x04> &b
 
     const std::array<uint8_t, 8> decrypted = Decrypt(modelNumber, figureKey);
 
-    //const uint32_t figNum = (uint32_t &) decrypted[0];
     const uint32_t figNum = uint32_t(decrypted[0]) | (uint32_t(decrypted[1]) << 8) | (uint32_t(decrypted[2]) << 16) | (uint32_t(decrypted[3]) << 24);
     // Characters have their model number encrypted in page 36
     if (figNum < 1000) {
@@ -1326,7 +1298,6 @@ uint32_t DimensionsToypad::GetFigureId(const std::array<uint8_t, 0x2D * 0x04> &b
     }
     // Vehicles/Gadgets have their model number written as little endian in page 36
     return uint32_t(modelNumber[0]) | (uint32_t(modelNumber[1]) << 8) | (uint32_t(modelNumber[2]) << 16) | (uint32_t(modelNumber[3]) << 24);
-    //return (uint32_t &) modelNumber[0];
 }
 
 DimensionsToypad::DimensionsMini &

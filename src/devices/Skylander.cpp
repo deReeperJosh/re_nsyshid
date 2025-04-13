@@ -1018,9 +1018,8 @@ std::string SkylanderPortal::GetSkylanderFromUISlot(uint8_t uiSlot) {
         uint16_t skyId  = uint16_t(thesky.data[0x11]) << 8 | uint16_t(thesky.data[0x10]);
         uint16_t skyVar = uint16_t(thesky.data[0x1D]) << 8 | uint16_t(thesky.data[0x1C]);
         return FindSkylander(skyId, skyVar);
-    } else {
-        return "None";
     }
+    return "None";
 }
 
 void SkylanderPortal::Skylander::Save() {
