@@ -4,12 +4,45 @@
 #include <cstdlib>
 #include <cstring>
 #include <format>
+#include <map>
 #include <random>
 #include <span>
 
 #include "utils/logger.h"
 
 RiderGate g_kamenridegate;
+
+const std::map<const std::pair<const uint8_t, const uint8_t>, const char *> s_listKamenRiders = {
+        {{0x10, 0x10}, "Kamen Rider Drive Wind"},
+        {{0x10, 0x20}, "Kamen Rider Drive Water"},
+        {{0x10, 0x30}, "Kamen Rider Drive Fire"},
+        {{0x10, 0x40}, "Kamen Rider Drive Light"},
+        {{0x10, 0x50}, "Kamen Rider Drive Dark"},
+        {{0x11, 0x10}, "Kamen Rider Gaim Wind"},
+        {{0x11, 0x20}, "Kamen Rider Gaim Water"},
+        {{0x12, 0x20}, "Kamen Rider Wizard Water"},
+        {{0x12, 0x30}, "Kamen Rider Wizard Fire"},
+        {{0x13, 0x40}, "Kamen Rider Fourze Light"},
+        {{0x14, 0x20}, "Kamen Rider 000 Water"},
+        {{0x15, 0x10}, "Kamen Rider Double Wind"},
+        {{0x16, 0x50}, "Kamen Rider Decade Dark"},
+        {{0x17, 0x50}, "Kamen Rider Kiva Dark"},
+        {{0x18, 0x40}, "Kamen Rider Den-O Light"},
+        {{0x19, 0x30}, "Kamen Rider Kabuto Fire"},
+        {{0x1A, 0x30}, "Kamen Rider Hibiki Fire"},
+        {{0x1B, 0x50}, "Kamen Rider Blade Dark"},
+        {{0x1C, 0x50}, "Kamen Rider Faiz Dark"},
+        {{0x1D, 0x10}, "Kamen Rider Ryuki Wind"},
+        {{0x1E, 0x20}, "Kamen Rider Agito Water"},
+        {{0x1F, 0x40}, "Kamen Rider Kuuga Light"},
+};
+
+const std::map<const uint8_t, const char *> s_listChips = {
+        {0x20, "Type Wild"},
+        {0x21, "Kamen Rider Zangetsu"},
+        {0x22, "All Dragon"},
+        {0x31, "Kachidoki Arms"},
+};
 
 KamenRiderUSBDevice::KamenRiderUSBDevice()
     : Device(0x6F0E, 0x0A20, 1, 2, 0, 64, 64) {
@@ -249,6 +282,14 @@ void RiderGate::GetBlankResponse(uint8_t command, uint8_t sequence, std::array<u
     replyBuf[4] = GenerateChecksum(replyBuf, 4);
 }
 
+bool RiderGate::LoadFigure(const std::array<uint8_t, 0x14 * 0x10> &buf, FILE *file, uint8_t uiSlot) {
+    if (m_figureUIPositions[uiSlot]) {
+        RemoveFigure(uiSlot);
+    }
+    m_figureUIPositions[uiSlot] = LoadFigure(buf, std::move(file));
+    return true;
+}
+
 uint8_t RiderGate::LoadFigure(const std::array<uint8_t, 0x14 * 0x10> &buf, FILE *file) {
     std::lock_guard lock(m_kamenRiderMutex);
 
@@ -257,9 +298,8 @@ uint8_t RiderGate::LoadFigure(const std::array<uint8_t, 0x14 * 0x10> &buf, FILE 
     // mimics spot retaining on the portal
     for (auto i = 0; i < 7; i++) {
         if (!m_figures[i].present) {
-            if (i < foundSlot) {
-                foundSlot = i;
-            }
+            foundSlot = i;
+            break;
         }
     }
 
@@ -281,9 +321,12 @@ uint8_t RiderGate::LoadFigure(const std::array<uint8_t, 0x14 * 0x10> &buf, FILE 
 }
 
 bool RiderGate::RemoveFigure(uint8_t index) {
+    if (!m_figureUIPositions[index]) {
+        return false;
+    }
     std::lock_guard lock(m_kamenRiderMutex);
 
-    auto &figure = m_figures[index];
+    auto &figure = m_figures[m_figureUIPositions[index].value()];
 
     if (figure.present) {
         figure.present = false;
@@ -303,20 +346,41 @@ bool RiderGate::RemoveFigure(uint8_t index) {
 }
 
 std::string RiderGate::FindFigure(uint8_t type, uint8_t id) {
+    if (type == 0x00) {
+        for (const auto &it : GetChipList()) {
+            if (it.first == id) {
+                return it.second;
+            }
+        }
+        return std::format("Unknown Chip ({})", id);
+    }
+    for (const auto &it : GetRiderList()) {
+        if (it.first.first == id && it.first.second == type) {
+            return it.second;
+        }
+    }
     switch (type) {
         case 0x10:
-            return "Grass " + std::to_string(id);
+            return std::format("Unknown Rider Wind ({})", id);
         case 0x20:
-            return "Water " + std::to_string(id);
+            return std::format("Unknown Rider Water ({})", id);
         case 0x30:
-            return "Fire " + std::to_string(id);
+            return std::format("Unknown Rider Fire ({})", id);
         case 0x40:
-            return "Light " + std::to_string(id);
+            return std::format("Unknown Rider Light ({})", id);
         case 0x50:
-            return "Dark " + std::to_string(id);
+            return std::format("Unknown Rider Dark ({})", id);
         default:
-            return "Unknown " + std::to_string(id);
+            return std::format("Unknown Rider ({})", id);
     }
+}
+
+std::map<const std::pair<const uint8_t, const uint8_t>, const char *> RiderGate::GetRiderList() {
+    return s_listKamenRiders;
+}
+
+std::map<const uint8_t, const char *> RiderGate::GetChipList() {
+    return s_listChips;
 }
 
 RiderGate::RiderFigure &RiderGate::GetFigureByUID(const std::array<uint8_t, 7> uid) {
@@ -335,6 +399,16 @@ uint8_t RiderGate::GenerateChecksum(const std::array<uint8_t, 64> &data,
         checksum += data[i];
     }
     return (checksum & 0xFF);
+}
+
+std::string RiderGate::GetFigureFromUISlot(uint8_t uiSlot) {
+    if (m_figureUIPositions[uiSlot]) {
+        auto &figure       = m_figures[m_figureUIPositions[uiSlot].value()];
+        uint8_t figureType = figure.data[0x1B];
+        uint8_t figureId   = figure.data[0x19];
+        return FindFigure(figureType, figureId);
+    }
+    return "None";
 }
 
 void RiderGate::RiderFigure::Save() {
