@@ -131,6 +131,7 @@ WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle ro
                 {SKYLANDER, "Emulate Skylander Portal"},
                 {INFINITY, "Emulate Infinity Base"},
                 {DIMENSIONS, "Emulate Dimensions Toypad"},
+                {KAMENRIDER, "Emulate Kamen Rider Gate"},
         };
 
         root.add(WUPSConfigItemMultipleValues::CreateFromValue(EMULATED_DEVICE_CONFIG_ID, "Device to Emulate",

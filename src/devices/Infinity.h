@@ -10,7 +10,7 @@
 
 class InfinityUSBDevice : public Device {
 public:
-    InfinityUSBDevice(/* args */);
+    InfinityUSBDevice();
     ~InfinityUSBDevice();
 
     bool GetDescriptor(uint8_t descType,
