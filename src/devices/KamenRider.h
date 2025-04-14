@@ -1,7 +1,9 @@
 #include <wut.h>
 
 #include <array>
+#include <map>
 #include <mutex>
+#include <optional>
 #include <queue>
 #include <span>
 
@@ -75,13 +77,19 @@ public:
     void GetBlankResponse(uint8_t command, uint8_t sequence, std::array<uint8_t, 64> &replyBuf);
 
     bool RemoveFigure(uint8_t index);
+    bool LoadFigure(const std::array<uint8_t, 0x14 * 0x10> &buf, FILE *file, uint8_t uiSlot);
     uint8_t LoadFigure(const std::array<uint8_t, 0x14 * 0x10> &buf, FILE *file);
 
     std::string FindFigure(uint8_t type, uint8_t id);
+    static std::map<const std::pair<const uint8_t, const uint8_t>, const char *> GetRiderList();
+    static std::map<const uint8_t, const char *> GetChipList();
+
+    std::string GetFigureFromUISlot(uint8_t uiSlot);
 
 protected:
     std::mutex m_kamenRiderMutex;
     std::array<RiderFigure, 8> m_figures{};
+    std::array<std::optional<uint8_t>, 8> m_figureUIPositions;
 
 private:
     uint8_t GenerateChecksum(const std::array<uint8_t, 64> &data,
