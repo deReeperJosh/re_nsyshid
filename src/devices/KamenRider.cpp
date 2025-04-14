@@ -329,6 +329,7 @@ bool RiderGate::RemoveFigure(uint8_t index) {
     auto &figure = m_figures[m_figureUIPositions[index].value()];
 
     if (figure.present) {
+        m_figureUIPositions[index] = std::nullopt;
         figure.present = false;
         figure.Save();
         fclose(figure.kamenFile);
@@ -404,8 +405,8 @@ uint8_t RiderGate::GenerateChecksum(const std::array<uint8_t, 64> &data,
 std::string RiderGate::GetFigureFromUISlot(uint8_t uiSlot) {
     if (m_figureUIPositions[uiSlot]) {
         auto &figure       = m_figures[m_figureUIPositions[uiSlot].value()];
-        uint8_t figureType = figure.data[0x1B];
-        uint8_t figureId   = figure.data[0x19];
+        uint8_t figureType = figure.data[0x19];
+        uint8_t figureId   = figure.data[0x1B];
         return FindFigure(figureType, figureId);
     }
     return "None";
