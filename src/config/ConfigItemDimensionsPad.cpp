@@ -630,6 +630,8 @@ static void enterToypadMenu(ConfigItemDimensionsPad *item) {
     uint8_t currentIndex = 0;
     item->figureNumbers  = g_dimensionstoypad.GetCurrentFigures();
 
+    populateColorQueues(item);
+
     while (true) {
         uint32_t buttonsTriggered = 0;
 
@@ -764,8 +766,6 @@ static void enterToypadMenu(ConfigItemDimensionsPad *item) {
                 redraw       = true;
             }
         }
-
-        populateColorQueues(item);
 
         if (!item->topColors.empty()) {
             item->topColor = item->topColors.front();
