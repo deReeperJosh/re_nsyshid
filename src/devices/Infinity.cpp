@@ -594,7 +594,7 @@ void InfinityBase::GetPresentFigures(uint8_t sequence,
                                      std::array<uint8_t, 32> &replyBuf) {
     int x = 3;
     for (uint8_t i = 0; i < m_figures.size(); i++) {
-        uint8_t slot = i == 0 ? 0x10 : (i < 4) ? 0x20
+        uint8_t slot = (i < 3) ? 0x10 : (i < 6) ? 0x20
                                                : 0x30;
         if (m_figures[i].present) {
             replyBuf[x]     = slot + m_figures[i].orderAdded;
@@ -634,6 +634,10 @@ void InfinityBase::WriteBlock(uint8_t fig_num, uint8_t block,
 
     InfinityFigure &figure = GetFigureByOrder(fig_num);
 
+    if (figure.orderAdded == 255 || !figure.present) {
+        DEBUG_FUNCTION_LINE_INFO("Couldn't find figure with order %u", fig_num);
+    }
+
     replyBuf[0]              = 0xaa;
     replyBuf[1]              = 0x02;
     replyBuf[2]              = sequence;
@@ -667,11 +671,10 @@ bool InfinityBase::RemoveFigure(uint8_t position) {
     std::lock_guard lock(m_infinityMutex);
     InfinityFigure &figure = m_figures[position];
 
-    figure.Save();
-    fclose(figure.infFile);
-    figure.figNum = 0;
-
     if (figure.present) {
+        figure.figNum = 0;
+        figure.Save();
+        fclose(figure.infFile);
         figure.present = false;
 
         position = DeriveFigurePosition(position);
@@ -851,7 +854,8 @@ InfinityBase::InfinityFigure &InfinityBase::GetFigureByOrder(uint8_t orderAdded)
             return m_figures[i];
         }
     }
-    return m_figures[0];
+    InfinityBase::InfinityFigure figure = {};
+    return figure;
 }
 
 uint8_t InfinityBase::DeriveFigurePosition(uint8_t position) {
@@ -902,5 +906,5 @@ void InfinityBase::InfinityFigure::Save() {
         return;
 
     fseeko(infFile, 0, SEEK_SET);
-    fwrite(data.data(), data.size(), sizeof(data[0]), infFile);
+    fwrite(data.data(), sizeof(data[0]), data.size(), infFile);
 }
