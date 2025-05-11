@@ -1334,7 +1334,7 @@ void DimensionsToypad::DimensionsMini::Save() {
         return;
 
     fseeko(dimFile, 0, SEEK_SET);
-    fwrite(data.data(), data.size(), sizeof(data[0]), dimFile);
+    fwrite(data.data(), sizeof(data[0]), data.size(), dimFile);
 }
 
 std::map<const uint32_t, const char *> DimensionsToypad::GetListMinifigs() {

@@ -1027,5 +1027,5 @@ void SkylanderPortal::Skylander::Save() {
         return;
 
     fseeko(skyFile, 0, SEEK_SET);
-    fwrite(data.data(), data.size(), sizeof(data[0]), skyFile);
+    fwrite(data.data(), sizeof(data[0]), data.size(), skyFile);
 }
