@@ -3,7 +3,6 @@
 */
 
 #include "ConfigItemSelectSkylander.hpp"
-#include "devices/Skylander.h"
 #include "utils/DrawUtils.hpp"
 #include "utils/input.h"
 #include "utils/logger.h"
@@ -51,6 +50,8 @@ enum ListEntryType {
 struct ListEntry {
     std::string name;
     ListEntryType type;
+    SubFolder createFolder;
+    std::pair<uint16_t, uint16_t> skylanderId; // skylander id and variant
     bool isFavorite;
 };
 
@@ -132,15 +133,396 @@ static void saveFavorites(ConfigItemSelectSkylander *item) {
     favoritesUpdated = false;
 }
 
+static void populateCreateMenu(const std::optional<SubFolder> &subfolder, std::vector<ListEntry> &entries) {
+    if (!subfolder || subfolder.value() == SubFolder::TOP) {
+        entries.push_back(ListEntry{"Spyro's Adventure", LIST_ENTRY_TYPE_DIR, SubFolder::SSA});
+        entries.push_back(ListEntry{"Giants", LIST_ENTRY_TYPE_DIR, SubFolder::SG});
+        entries.push_back(ListEntry{"Swap Force", LIST_ENTRY_TYPE_DIR, SubFolder::SSF});
+        entries.push_back(ListEntry{"Trap Team", LIST_ENTRY_TYPE_DIR, SubFolder::STT});
+        entries.push_back(ListEntry{"Superchargers", LIST_ENTRY_TYPE_DIR, SubFolder::SSC});
+    } else {
+        switch (subfolder.value()) {
+            case SubFolder::SSA:
+                entries.push_back(ListEntry{"Characters", LIST_ENTRY_TYPE_DIR, SubFolder::SSA_CHAR});
+                entries.push_back(ListEntry{"Magic Items", LIST_ENTRY_TYPE_DIR, SubFolder::SSA_MAGIC_ITEM});
+                entries.push_back(ListEntry{"Sidekicks", LIST_ENTRY_TYPE_DIR, SubFolder::SSA_SIDEKICK});
+                break;
+            case SubFolder::SG:
+                entries.push_back(ListEntry{"Giants", LIST_ENTRY_TYPE_DIR, SubFolder::SG_GIANTS});
+                entries.push_back(ListEntry{"Characters", LIST_ENTRY_TYPE_DIR, SubFolder::SG_CHAR});
+                entries.push_back(ListEntry{"Magic Items", LIST_ENTRY_TYPE_DIR, SubFolder::SG_MAGIC_ITEM});
+                entries.push_back(ListEntry{"Sidekicks", LIST_ENTRY_TYPE_DIR, SubFolder::SG_SIDEKICK});
+                break;
+            case SubFolder::SSF:
+                entries.push_back(ListEntry{"Swappers", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_SWAPPERS});
+                entries.push_back(ListEntry{"Characters", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_CHAR});
+                entries.push_back(ListEntry{"Magic Items", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_MAGIC_ITEM});
+                break;
+            case SubFolder::STT:
+                entries.push_back(ListEntry{"Characters", LIST_ENTRY_TYPE_DIR, SubFolder::STT_CHAR});
+                entries.push_back(ListEntry{"Magic Items", LIST_ENTRY_TYPE_DIR, SubFolder::STT_MAGIC_ITEM});
+                entries.push_back(ListEntry{"Traps", LIST_ENTRY_TYPE_DIR, SubFolder::STT_TRAPS});
+                entries.push_back(ListEntry{"Minis", LIST_ENTRY_TYPE_DIR, SubFolder::STT_MINIS});
+                break;
+            case SubFolder::SSC:
+                entries.push_back(ListEntry{"Characters", LIST_ENTRY_TYPE_DIR, SubFolder::SSC_CHAR});
+                entries.push_back(ListEntry{"Trophies", LIST_ENTRY_TYPE_DIR, SubFolder::SSC_TROPHIES});
+                entries.push_back(ListEntry{"Vehicles", LIST_ENTRY_TYPE_DIR, SubFolder::SSC_VEHICLES});
+                break;
+            case SubFolder::SSA_CHAR:
+                entries.push_back(ListEntry{"Air", LIST_ENTRY_TYPE_DIR, SubFolder::SSA_CHAR_AIR});
+                entries.push_back(ListEntry{"Earth", LIST_ENTRY_TYPE_DIR, SubFolder::SSA_CHAR_EARTH});
+                entries.push_back(ListEntry{"Fire", LIST_ENTRY_TYPE_DIR, SubFolder::SSA_CHAR_FIRE});
+                entries.push_back(ListEntry{"Life", LIST_ENTRY_TYPE_DIR, SubFolder::SSA_CHAR_LIFE});
+                entries.push_back(ListEntry{"Magic", LIST_ENTRY_TYPE_DIR, SubFolder::SSA_CHAR_MAGIC});
+                entries.push_back(ListEntry{"Tech", LIST_ENTRY_TYPE_DIR, SubFolder::SSA_CHAR_TECH});
+                entries.push_back(ListEntry{"Undead", LIST_ENTRY_TYPE_DIR, SubFolder::SSA_CHAR_UNDEAD});
+                entries.push_back(ListEntry{"Water", LIST_ENTRY_TYPE_DIR, SubFolder::SSA_CHAR_WATER});
+                break;
+            case SubFolder::SG_CHAR:
+                entries.push_back(ListEntry{"Air", LIST_ENTRY_TYPE_DIR, SubFolder::SG_CHAR_AIR});
+                entries.push_back(ListEntry{"Earth", LIST_ENTRY_TYPE_DIR, SubFolder::SG_CHAR_EARTH});
+                entries.push_back(ListEntry{"Fire", LIST_ENTRY_TYPE_DIR, SubFolder::SG_CHAR_FIRE});
+                entries.push_back(ListEntry{"Life", LIST_ENTRY_TYPE_DIR, SubFolder::SG_CHAR_LIFE});
+                entries.push_back(ListEntry{"Magic", LIST_ENTRY_TYPE_DIR, SubFolder::SG_CHAR_MAGIC});
+                entries.push_back(ListEntry{"Tech", LIST_ENTRY_TYPE_DIR, SubFolder::SG_CHAR_TECH});
+                entries.push_back(ListEntry{"Undead", LIST_ENTRY_TYPE_DIR, SubFolder::SG_CHAR_UNDEAD});
+                entries.push_back(ListEntry{"Water", LIST_ENTRY_TYPE_DIR, SubFolder::SG_CHAR_WATER});
+                break;
+            case SubFolder::SSF_CHAR:
+                entries.push_back(ListEntry{"Air", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_CHAR_AIR});
+                entries.push_back(ListEntry{"Earth", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_CHAR_EARTH});
+                entries.push_back(ListEntry{"Fire", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_CHAR_FIRE});
+                entries.push_back(ListEntry{"Life", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_CHAR_LIFE});
+                entries.push_back(ListEntry{"Magic", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_CHAR_MAGIC});
+                entries.push_back(ListEntry{"Tech", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_CHAR_TECH});
+                entries.push_back(ListEntry{"Undead", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_CHAR_UNDEAD});
+                entries.push_back(ListEntry{"Water", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_CHAR_WATER});
+                break;
+            case SubFolder::STT_CHAR:
+                entries.push_back(ListEntry{"Air", LIST_ENTRY_TYPE_DIR, SubFolder::STT_CHAR_AIR});
+                entries.push_back(ListEntry{"Dark", LIST_ENTRY_TYPE_DIR, SubFolder::STT_CHAR_DARK});
+                entries.push_back(ListEntry{"Earth", LIST_ENTRY_TYPE_DIR, SubFolder::STT_CHAR_EARTH});
+                entries.push_back(ListEntry{"Fire", LIST_ENTRY_TYPE_DIR, SubFolder::STT_CHAR_FIRE});
+                entries.push_back(ListEntry{"Life", LIST_ENTRY_TYPE_DIR, SubFolder::STT_CHAR_LIFE});
+                entries.push_back(ListEntry{"Light", LIST_ENTRY_TYPE_DIR, SubFolder::STT_CHAR_LIGHT});
+                entries.push_back(ListEntry{"Magic", LIST_ENTRY_TYPE_DIR, SubFolder::STT_CHAR_MAGIC});
+                entries.push_back(ListEntry{"Tech", LIST_ENTRY_TYPE_DIR, SubFolder::STT_CHAR_TECH});
+                entries.push_back(ListEntry{"Undead", LIST_ENTRY_TYPE_DIR, SubFolder::STT_CHAR_UNDEAD});
+                entries.push_back(ListEntry{"Water", LIST_ENTRY_TYPE_DIR, SubFolder::STT_CHAR_WATER});
+                break;
+            case SubFolder::SSC_CHAR:
+                entries.push_back(ListEntry{"Air", LIST_ENTRY_TYPE_DIR, SubFolder::SSC_CHAR_AIR});
+                entries.push_back(ListEntry{"Dark", LIST_ENTRY_TYPE_DIR, SubFolder::SSC_CHAR_DARK});
+                entries.push_back(ListEntry{"Earth", LIST_ENTRY_TYPE_DIR, SubFolder::SSC_CHAR_EARTH});
+                entries.push_back(ListEntry{"Fire", LIST_ENTRY_TYPE_DIR, SubFolder::SSC_CHAR_FIRE});
+                entries.push_back(ListEntry{"Life", LIST_ENTRY_TYPE_DIR, SubFolder::SSC_CHAR_LIFE});
+                entries.push_back(ListEntry{"Light", LIST_ENTRY_TYPE_DIR, SubFolder::SSC_CHAR_LIGHT});
+                entries.push_back(ListEntry{"Magic", LIST_ENTRY_TYPE_DIR, SubFolder::SSC_CHAR_MAGIC});
+                entries.push_back(ListEntry{"Tech", LIST_ENTRY_TYPE_DIR, SubFolder::SSC_CHAR_TECH});
+                entries.push_back(ListEntry{"Undead", LIST_ENTRY_TYPE_DIR, SubFolder::SSC_CHAR_UNDEAD});
+                entries.push_back(ListEntry{"Water", LIST_ENTRY_TYPE_DIR, SubFolder::SSC_CHAR_WATER});
+                break;
+            case SubFolder::SSF_SWAPPERS:
+                entries.push_back(ListEntry{"Air", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_SWAP_AIR});
+                entries.push_back(ListEntry{"Earth", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_SWAP_EARTH});
+                entries.push_back(ListEntry{"Fire", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_SWAP_FIRE});
+                entries.push_back(ListEntry{"Life", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_SWAP_LIFE});
+                entries.push_back(ListEntry{"Magic", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_SWAP_MAGIC});
+                entries.push_back(ListEntry{"Tech", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_SWAP_TECH});
+                entries.push_back(ListEntry{"Undead", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_SWAP_UNDEAD});
+                entries.push_back(ListEntry{"Water", LIST_ENTRY_TYPE_DIR, SubFolder::SSF_SWAP_WATER});
+                break;
+            case SubFolder::STT_TRAPS:
+                entries.push_back(ListEntry{"Air", LIST_ENTRY_TYPE_DIR, SubFolder::STT_TRAP_AIR});
+                entries.push_back(ListEntry{"Dark", LIST_ENTRY_TYPE_DIR, SubFolder::STT_TRAP_DARK});
+                entries.push_back(ListEntry{"Earth", LIST_ENTRY_TYPE_DIR, SubFolder::STT_TRAP_EARTH});
+                entries.push_back(ListEntry{"Fire", LIST_ENTRY_TYPE_DIR, SubFolder::STT_TRAP_FIRE});
+                entries.push_back(ListEntry{"Life", LIST_ENTRY_TYPE_DIR, SubFolder::STT_TRAP_LIFE});
+                entries.push_back(ListEntry{"Light", LIST_ENTRY_TYPE_DIR, SubFolder::STT_TRAP_LIGHT});
+                entries.push_back(ListEntry{"Magic", LIST_ENTRY_TYPE_DIR, SubFolder::STT_TRAP_MAGIC});
+                entries.push_back(ListEntry{"Tech", LIST_ENTRY_TYPE_DIR, SubFolder::STT_TRAP_TECH});
+                entries.push_back(ListEntry{"Undead", LIST_ENTRY_TYPE_DIR, SubFolder::STT_TRAP_UNDEAD});
+                entries.push_back(ListEntry{"Water", LIST_ENTRY_TYPE_DIR, SubFolder::STT_TRAP_WATER});
+                entries.push_back(ListEntry{"Kaos", LIST_ENTRY_TYPE_DIR, SubFolder::STT_TRAP_KAOS});
+                break;
+            case SubFolder::SSC_VEHICLES:
+                entries.push_back(ListEntry{"Air", LIST_ENTRY_TYPE_DIR, SubFolder::SSC_VEHICLE_AIR});
+                entries.push_back(ListEntry{"Land", LIST_ENTRY_TYPE_DIR, SubFolder::SSC_VEHICLE_LAND});
+                entries.push_back(ListEntry{"Sea", LIST_ENTRY_TYPE_DIR, SubFolder::SSC_VEHICLE_SEA});
+                break;
+            default:
+                std::vector<std::pair<const uint16_t, const uint16_t>> figuresForFolder = g_skyportal.GetSkylandersForFolder(subfolder.value());
+                for (const auto &figure : figuresForFolder) {
+                    std::string name = g_skyportal.FindSkylander(figure.first, figure.second);
+                    if (name.empty()) {
+                        continue;
+                    }
+
+                    ListEntry entry;
+                    entry.name        = name;
+                    entry.type        = LIST_ENTRY_TYPE_FILE;
+                    entry.skylanderId = figure;
+                    entries.push_back(entry);
+                }
+                break;
+        }
+    }
+}
+
+static void enterCreationMenu(ConfigItemSelectSkylander *item) {
+    std::vector<ListEntry> entries;
+    bool highlightSelected = true;
+    // Init DrawUtils
+    DrawUtils::initBuffers();
+    if (!DrawUtils::initFont()) {
+        return;
+    }
+
+    item->createFolder = new CreateFolder{SubFolder::TOP, nullptr, nullptr};
+
+    while (true) {
+        entries.clear();
+
+        // Add top entry
+        if (item->currentPath != item->rootPath) {
+            entries.push_back(ListEntry{"..", LIST_ENTRY_TYPE_TOP});
+        }
+
+        populateCreateMenu(item->createFolder->subfolder, entries);
+
+        // sort files
+        std::sort(entries.begin(), entries.end(),
+                  [](ListEntry &a, ListEntry &b) {
+                      // top dir entry is always at the top
+                      if (a.type == LIST_ENTRY_TYPE_TOP) {
+                          return true;
+                      } else if (b.type == LIST_ENTRY_TYPE_TOP) {
+                          return false;
+                      }
+
+                      // list dirs above files
+                      if (a.type == LIST_ENTRY_TYPE_DIR && b.type == LIST_ENTRY_TYPE_FILE) {
+                          return true;
+                      } else if (a.type == LIST_ENTRY_TYPE_FILE && b.type == LIST_ENTRY_TYPE_DIR) {
+                          return false;
+                      }
+
+                      // sort the rest alphabetically
+                      return strcasecmp(a.name.c_str(), b.name.c_str()) <= 0;
+                  });
+
+        int32_t selected = -1;
+
+        uint32_t currentIndex = (selected > 0 && highlightSelected) ? selected : 0;
+        uint32_t start        = 0;
+        uint32_t end          = std::min(entries.size(), (size_t) MAX_ENTRIES_PER_PAGE);
+
+        // only highlight selected item once
+        highlightSelected = false;
+
+        bool redraw = true;
+
+        VPADStatus vpad{};
+        VPADReadError vpadError;
+        KPADStatus kpad{};
+        KPADError kpadError;
+
+        while (true) {
+            uint32_t buttonsTriggered = 0;
+
+            VPADRead(VPAD_CHAN_0, &vpad, 1, &vpadError);
+            if (vpadError == VPAD_READ_SUCCESS) {
+                buttonsTriggered = vpad.trigger;
+            }
+
+            // read kpads and remap the buttons we need
+            for (int i = 0; i < 4; i++) {
+                if (KPADReadEx((KPADChan) i, &kpad, 1, &kpadError) > 0) {
+                    if (kpadError != KPAD_ERROR_OK) {
+                        continue;
+                    }
+
+                    if (kpad.extensionType == WPAD_EXT_CORE || kpad.extensionType == WPAD_EXT_NUNCHUK ||
+                        kpad.extensionType == WPAD_EXT_MPLUS || kpad.extensionType == WPAD_EXT_MPLUS_NUNCHUK) {
+                        buttonsTriggered |= remapWiiMoteButtons(kpad.trigger);
+                    } else if (kpad.extensionType == WPAD_EXT_CLASSIC) {
+                        buttonsTriggered |= remapClassicButtons(kpad.classic.trigger);
+                    } else if (kpad.extensionType == WPAD_EXT_PRO_CONTROLLER) {
+                        buttonsTriggered |= remapProButtons(kpad.pro.trigger);
+                    }
+                }
+            }
+
+            if (buttonsTriggered & VPAD_BUTTON_DOWN) {
+                if (currentIndex < entries.size() - 1) {
+                    currentIndex++;
+                    redraw = true;
+                }
+            }
+
+            if (buttonsTriggered & VPAD_BUTTON_UP) {
+                if (currentIndex > 0) {
+                    --currentIndex;
+                    redraw = true;
+                }
+            }
+
+            if (buttonsTriggered & VPAD_BUTTON_A) {
+                ListEntry &currentEntry = entries[currentIndex];
+                if (currentEntry.type == LIST_ENTRY_TYPE_FILE) {
+                    // choose skylander
+                    item->skylanderId       = currentEntry.skylanderId;
+                    selected                = currentIndex;
+                    item->selectedSkylander = item->currentPath + currentEntry.name + ".sky";
+                    redraw                  = true;
+                } else if (currentEntry.type == LIST_ENTRY_TYPE_DIR) {
+                    item->currentPath += currentEntry.name + "/";
+                    if (!item->createFolder->next) {
+                        // create a new folder
+                        item->createFolder->next = new CreateFolder{currentEntry.createFolder, nullptr, item->createFolder};
+                    }
+                    // go into the next folder
+                    item->createFolder = item->createFolder->next;
+                    break;
+                } else if (currentEntry.type == LIST_ENTRY_TYPE_TOP) {
+                    if (!item->createFolder->prev) {
+                        break; // already at the top
+                    }
+                    item->createFolder = item->createFolder->prev;
+                    item->currentPath  = item->currentPath.substr(0, item->currentPath.find_last_of("/", item->currentPath.length() - 2) + 1);
+                    break;
+                }
+            }
+
+            if (buttonsTriggered & VPAD_BUTTON_B) {
+                // quit for the root path
+                if (!item->createFolder->prev) {
+                    // create a new skylander
+                    if (item->selectedSkylander.empty()) {
+                        // no skylander selected, just return
+                        return;
+                    }
+                    g_skyportal.CreateSkylander(item->selectedSkylander, item->skylanderId.first, item->skylanderId.second);
+                    return;
+                }
+                // go one dir up for any other path
+                item->createFolder = item->createFolder->prev;
+                break;
+            }
+
+            if (buttonsTriggered & VPAD_BUTTON_HOME) {
+                // create a new skylander
+                if (item->selectedSkylander.empty()) {
+                    // no skylander selected, just return
+                    return;
+                }
+                g_skyportal.CreateSkylander(item->selectedSkylander, item->skylanderId.first, item->skylanderId.second);
+                return;
+            }
+
+            // handle scrolling past the end
+            if (currentIndex >= end) {
+                end   = currentIndex + 1;
+                start = end - MAX_ENTRIES_PER_PAGE;
+            } else if (currentIndex < start) {
+                start = currentIndex;
+                end   = start + MAX_ENTRIES_PER_PAGE;
+            }
+
+            if (redraw) {
+                DrawUtils::beginDraw();
+                DrawUtils::clear(COLOR_BACKGROUND);
+
+                // draw entries
+                uint32_t index = 8 + 24 + 8 + 4;
+                for (uint32_t i = start; i < end; i++) {
+                    ListEntry &entry = entries[i];
+
+                    DrawUtils::setFontColor(COLOR_TEXT);
+
+                    if (i == currentIndex) {
+                        DrawUtils::drawRect(16, index, SCREEN_WIDTH - 16 * 2, 30, 3, COLOR_BORDER_HIGHLIGHTED);
+                    } else {
+                        DrawUtils::drawRect(16, index, SCREEN_WIDTH - 16 * 2, 30, 2, COLOR_BORDER);
+                    }
+
+                    DrawUtils::setFontSize(16);
+                    DrawUtils::print(28 + 16 * 2, index + 6 + 16, entry.name.c_str());
+
+                    if (entry.type == LIST_ENTRY_TYPE_FILE) {
+                        // draw selected icon
+                        if (selected != -1 && i == (uint32_t) selected) {
+                            DrawUtils::print(16 * 2, index + 6 + 16, "\u25c9");
+                        } else {
+                            DrawUtils::print(16 * 2, index + 6 + 16, "\u25cb");
+                        }
+
+                        if (entry.isFavorite) {
+                            // draw favorite icon
+                            for (uint32_t i = 0; i < sizeof(fav_icon) / sizeof(Color); ++i) {
+                                DrawUtils::drawPixel(SCREEN_WIDTH - (16 * 3) + (i % 20), index + 4 + (i / 20), fav_icon[i]);
+                            }
+                        }
+                    } else if (entry.type == LIST_ENTRY_TYPE_DIR) {
+                        // draw directory icon
+                        for (uint32_t i = 0; i < sizeof(dir_icon) / sizeof(Color); ++i) {
+                            DrawUtils::drawPixel(16 * 2 + (i % 20), index + 4 + (i / 20), dir_icon[i]);
+                        }
+                    } else if (entry.type == LIST_ENTRY_TYPE_TOP) {
+                        // draw up icon
+                        DrawUtils::print(16 * 2, index + 6 + 16, "\ue092");
+                    }
+
+                    index += 29 + 4;
+                }
+
+                DrawUtils::setFontColor(COLOR_TEXT);
+
+                // draw top bar
+                DrawUtils::setFontSize(24);
+                DrawUtils::print(16, 6 + 24, "re_nsyshid - Select Skylander");
+                DrawUtils::setFontSize(18);
+                std::string path = item->currentPath.c_str();
+                // remove root path
+                path = path.substr(item->rootPath.size());
+                // trim to make sure it fits
+                if (path.length() > MAX_DISPLAY_PATH_LEN) {
+                    path = "..." + path.substr(path.length() - MAX_DISPLAY_PATH_LEN);
+                }
+                DrawUtils::print(SCREEN_WIDTH - 16, 8 + 24, path.c_str(), true);
+                DrawUtils::drawRectFilled(8, 8 + 24 + 4, SCREEN_WIDTH - 8 * 2, 3, COLOR_BLACK);
+
+                // draw bottom bar
+                DrawUtils::drawRectFilled(8, SCREEN_HEIGHT - 24 - 8 - 4, SCREEN_WIDTH - 8 * 2, 3, COLOR_BLACK);
+                DrawUtils::setFontSize(18);
+                DrawUtils::print(16, SCREEN_HEIGHT - 10, "\ue07d Navigate ");
+                DrawUtils::print(SCREEN_WIDTH - 16, SCREEN_HEIGHT - 10, "\ue002 Favorite / \ue000 Select", true);
+
+                // draw scroll indicators
+                DrawUtils::setFontSize(24);
+                if (end < entries.size()) {
+                    DrawUtils::print(SCREEN_WIDTH / 2 + 12, SCREEN_HEIGHT - 32, "\ufe3e", true);
+                }
+                if (start > 0) {
+                    DrawUtils::print(SCREEN_WIDTH / 2 + 12, 32 + 20, "\ufe3d", true);
+                }
+
+                // draw back button
+                DrawUtils::setFontSize(18);
+                const char *exitHint = "\ue001 Back";
+                DrawUtils::print(SCREEN_WIDTH / 2 + DrawUtils::getTextWidth(exitHint) / 2, SCREEN_HEIGHT - 10, exitHint, true);
+
+                DrawUtils::endDraw();
+                redraw = false;
+            }
+        }
+    }
+}
+
 static void enterSelectionMenu(ConfigItemSelectSkylander *item) {
     std::vector<ListEntry> entries;
     bool highlightSelected = true;
-    bool openTidFolder     = true;
-
-    // jump to the path of the currently selected amiibo
-    // if (!item->selectedSkylander.empty() && item->selectedSkylander.starts_with(item->rootPath)) {
-    //     item->currentPath = item->selectedSkylander.substr(0, item->selectedSkylander.find_last_of("/") + 1);
-    // }
 
     // Init DrawUtils
     DrawUtils::initBuffers();
@@ -149,7 +531,6 @@ static void enterSelectionMenu(ConfigItemSelectSkylander *item) {
     }
 
     while (true) {
-    refresh:;
         entries.clear();
 
         // Add top entry
@@ -188,25 +569,6 @@ static void enterSelectionMenu(ConfigItemSelectSkylander *item) {
             return;
         }
 
-        // check if there is a folder in the root which starts with the current TID
-        if (openTidFolder && item->currentPath == item->rootPath) {
-            uint64_t titleId = OSGetTitleID();
-            char titleIdString[17];
-            snprintf(titleIdString, sizeof(titleIdString), "%016llx", titleId);
-
-            for (ListEntry &e : entries) {
-                if (e.type == LIST_ENTRY_TYPE_DIR) {
-                    if (strncasecmp(e.name.c_str(), titleIdString, 16) == 0) {
-                        // open it if there is
-                        item->currentPath += e.name + "/";
-                        openTidFolder = false;
-                        goto refresh;
-                    }
-                }
-            }
-        }
-        openTidFolder = false;
-
         // sort files
         std::sort(entries.begin(), entries.end(),
                   [](ListEntry &a, ListEntry &b) {
@@ -242,7 +604,7 @@ static void enterSelectionMenu(ConfigItemSelectSkylander *item) {
 
         uint32_t currentIndex = (selected > 0 && highlightSelected) ? selected : 0;
         uint32_t start        = 0;
-        uint32_t end          = std::min(entries.size(), (uint32_t) MAX_ENTRIES_PER_PAGE);
+        uint32_t end          = std::min(entries.size(), (size_t) MAX_ENTRIES_PER_PAGE);
 
         // only highlight selected item once
         highlightSelected = false;
@@ -483,6 +845,8 @@ static void ConfigItemSelectSkylander_onInput(void *context, WUPSConfigSimplePad
     } else if ((input.buttons_d & WUPS_CONFIG_BUTTON_X) == WUPS_CONFIG_BUTTON_X) {
         g_skyportal.RemoveSkylander(item->slot);
         item->selectedSkylander.clear();
+    } else if ((input.buttons_d & WUPS_CONFIG_BUTTON_Y) == WUPS_CONFIG_BUTTON_Y) {
+        enterCreationMenu(item);
     }
 }
 

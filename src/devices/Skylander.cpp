@@ -5,7 +5,10 @@
 #include <array>
 #include <cstring>
 #include <format>
+#include <fstream>
+#include <iostream>
 #include <optional>
+#include <random>
 #include <stdio.h>
 #include <thread>
 #include <wut.h>
@@ -619,6 +622,84 @@ const std::map<const std::pair<const uint16_t, const uint16_t>, const char *>
                 {{3503, 0x4000}, "Kaos Trophy"},
 };
 
+const std::map<const SubFolder, std::vector<std::pair<const uint16_t, const uint16_t>>>
+        s_skylanderUIList = {
+                {SSA_CHAR_AIR, {{0, 0x0000}, {1, 0x0000}, {2, 0x0000}, {3, 0x0000}}},
+                {SSA_CHAR_EARTH, {{4, 0x0000}, {5, 0x0000}, {6, 0x0000}, {7, 0x0000}, {404, 0x0000}}},
+                {SSA_CHAR_FIRE, {{8, 0x0000}, {9, 0x0000}, {10, 0x0000}, {11, 0x0000}}},
+                {SSA_CHAR_WATER, {{12, 0x0000}, {13, 0x0000}, {14, 0x0000}, {15, 0x0000}}},
+                {SSA_CHAR_MAGIC, {{16, 0x0000}, {17, 0x0000}, {18, 0x0000}, {23, 0x0000}, {28, 0x0000}, {416, 0x0000}}},
+                {SSA_CHAR_TECH, {{19, 0x0000}, {20, 0x0000}, {21, 0x0000}, {22, 0x0000}, {419, 0x0000}}},
+                {SSA_CHAR_LIFE, {{24, 0x0000}, {25, 0x0000}, {26, 0x0000}, {27, 0x0000}}},
+                {SSA_CHAR_UNDEAD, {{29, 0x0000}, {30, 0x0000}, {31, 0x0000}, {32, 0x0000}, {430, 0x0000}}},
+                {SSA_MAGIC_ITEM, {{200, 0x0000}, {201, 0x0000}, {202, 0x0000}, {203, 0x0000}, {204, 0x0000}, {205, 0x0000}, {206, 0x0000}, {207, 0x0000}, {300, 0x0000}, {301, 0x0000}, {302, 0x0000}, {303, 0x0000}, {304, 0x0000}}},
+                {SSA_SIDEKICK, {{505, 0x0000}, {514, 0x0000}, {519, 0x0000}, {526, 0x0000}}},
+                {SG_CHAR_AIR, {{0, 0x1801}, {0, 0x1C02}, {1, 0x1801}, {3, 0x1801}, {100, 0x1000}, {100, 0x1206}, {100, 0x1403}}},
+                {SG_CHAR_EARTH, {{4, 0x1801}, {5, 0x1801}, {7, 0x1206}, {7, 0x1801}, {103, 0x1000}}},
+                {SG_CHAR_FIRE, {{9, 0x1206}, {9, 0x1801}, {10, 0x1801}, {10, 0x1C03}, {11, 0x1801}, {105, 0x1000}, {105, 0x1402}}},
+                {SG_CHAR_WATER, {{12, 0x1801}, {14, 0x1801}, {15, 0x1801}, {15, 0x1C03}, {106, 0x1000}, {106, 0x1206}, {106, 0x1603}}},
+                {SG_CHAR_MAGIC, {{16, 0x1801}, {18, 0x1801}, {18, 0x1C02}, {23, 0x1801}, {108, 0x1000}, {108, 0x1206}, {108, 0x1402}}},
+                {SG_CHAR_TECH, {{19, 0x1801}, {20, 0x1206}, {20, 0x1801}, {21, 0x1801}, {111, 0x1000}}},
+                {SG_CHAR_LIFE, {{25, 0x1801}, {26, 0x1801}, {26, 0x1C03}, {27, 0x1801}, {113, 0x1000}, {113, 0x1206}}},
+                {SG_CHAR_UNDEAD, {{29, 0x1206}, {29, 0x1801}, {30, 0x1801}, {32, 0x1801}, {115, 0x1000}}},
+                {SG_GIANTS, {{101, 0x1206}, {102, 0x1206}, {102, 0x1602}, {104, 0x1206}, {107, 0x1206}, {109, 0x1206}, {109, 0x1602}, {110, 0x1206}, {110, 0x1603}, {112, 0x1206}, {112, 0x1602}, {114, 0x1206}}},
+                {SG_MAGIC_ITEM, {{201, 0x0002}, {208, 0x1206}, {208, 0x1602}, {209, 0x1206}}},
+                {SG_SIDEKICK, {{540, 0x1000}, {541, 0x1000}, {542, 0x1000}, {543, 0x1000}}},
+                {SSF_SWAP_AIR, {{1000, 0x2000}, {2000, 0x2000}, {1001, 0x2000}, {2001, 0x2000}, {1001, 0x2403}, {2001, 0x2403}}},
+                {SSF_SWAP_EARTH, {{1002, 0x2000}, {2002, 0x2000}, {1003, 0x2000}, {2003, 0x2000}}},
+                {SSF_SWAP_FIRE, {{1004, 0x2000}, {2004, 0x2000}, {1004, 0x2402}, {2004, 0x2402}, {1005, 0x2000}, {2005, 0x2000}, {1005, 0x2402}, {2005, 0x2402}}},
+                {SSF_SWAP_WATER, {{1014, 0x2000}, {2014, 0x2000}, {1014, 0x2402}, {2014, 0x2402}, {1015, 0x2000}, {2015, 0x2000}, {1015, 0x2402}, {2015, 0x2402}}},
+                {SSF_SWAP_MAGIC, {{1008, 0x2000}, {2008, 0x2000}, {1008, 0x2402}, {2008, 0x2402}, {1009, 0x2000}, {2009, 0x2000}}},
+                {SSF_SWAP_TECH, {{1010, 0x2000}, {2010, 0x2000}, {1010, 0x2402}, {2010, 0x2402}, {1011, 0x2000}, {2011, 0x2000}}},
+                {SSF_SWAP_LIFE, {{1006, 0x2000}, {2006, 0x2000}, {1007, 0x2000}, {2007, 0x2000}}},
+                {SSF_SWAP_UNDEAD, {{1012, 0x2000}, {2012, 0x2000}, {1012, 0x2403}, {2012, 0x2403}, {1013, 0x2000}, {2013, 0x2000}, {1013, 0x2402}, {2013, 0x2402}}},
+                {SSF_CHAR_AIR, {{0, 0x2805}, {2, 0x2206}, {100, 0x2805}, {3000, 0x2000}, {3001, 0x2000}}},
+                {SSF_CHAR_EARTH, {{5, 0x2805}, {7, 0x2805}, {103, 0x1402}, {3002, 0x2000}, {3002, 0x2402}, {3003, 0x2000}}},
+                {SSF_CHAR_FIRE, {{9, 0x2805}, {105, 0x2805}, {3004, 0x2000}, {3005, 0x2000}, {3005, 0x2206}}},
+                {SSF_CHAR_WATER, {{13, 0x2206}, {14, 0x2805}, {106, 0x2805}, {3014, 0x2000}, {3015, 0x2000}}},
+                {SSF_CHAR_MAGIC, {{16, 0x2805}, {16, 0x2C02}, {108, 0x2805}, {3008, 0x2000}, {3009, 0x2000}, {3009, 0x2206}, {3009, 0x2602}}},
+                {SSF_CHAR_TECH, {{19, 0x2805}, {19, 0x2C02}, {111, 0x2805}, {3010, 0x2000}, {3010, 0x2206}, {3010, 0x2402}, {3011, 0x2000}, {3011, 0x2404}}},
+                {SSF_CHAR_LIFE, {{24, 0x2805}, {26, 0x2805}, {26, 0x2C02}, {3006, 0x2000}, {3006, 0x2206}, {3006, 0x2402}, {3007, 0x2000}, {3007, 0x2403}}},
+                {SSF_CHAR_UNDEAD, {{30, 0x2805}, {32, 0x2805}, {3012, 0x2000}, {3013, 0x2000}, {3013, 0x2206}, {3013, 0x2603}}},
+                {SSF_MAGIC_ITEM, {{3200, 0x2000}, {3201, 0x2000}, {3202, 0x2000}, {3203, 0x2000}, {3204, 0x2000}, {3300, 0x2000}, {3301, 0x2000}, {3302, 0x2206}, {3303, 0x2206}}},
+                {STT_CHAR_AIR, {{100, 0x3805}, {450, 0x3000}, {451, 0x3000}, {452, 0x3000}, {453, 0x3000}, {453, 0x3403}}},
+                {STT_CHAR_EARTH, {{454, 0x3000}, {455, 0x3000}, {455, 0x3402}, {456, 0x3000}, {457, 0x3000}}},
+                {STT_CHAR_FIRE, {{458, 0x3000}, {458, 0x3402}, {459, 0x3000}, {460, 0x3000}, {461, 0x3000}, {3004, 0x3801}}},
+                {STT_CHAR_WATER, {{14, 0x3809}, {462, 0x3000}, {462, 0x3402}, {463, 0x3000}, {463, 0x3402}, {464, 0x3000}, {465, 0x3000}}},
+                {STT_CHAR_MAGIC, {{108, 0x3805}, {108, 0x3C02}, {466, 0x3000}, {467, 0x3000}, {468, 0x3000}, {468, 0x3403}, {469, 0x3000}, {469, 0x3402}}},
+                {STT_CHAR_TECH, {{470, 0x3000}, {470, 0x3403}, {471, 0x3000}, {472, 0x3000}, {473, 0x3000}}},
+                {STT_CHAR_LIFE, {{113, 0x3801}, {474, 0x3000}, {474, 0x3403}, {475, 0x3000}, {476, 0x3000}, {476, 0x3402}, {477, 0x3000}}},
+                {STT_CHAR_UNDEAD, {{478, 0x3000}, {478, 0x3402}, {479, 0x3000}, {480, 0x3000}, {481, 0x3000}}},
+                {STT_CHAR_LIGHT, {{482, 0x3000}, {483, 0x3000}}},
+                {STT_CHAR_DARK, {{484, 0x3000}, {485, 0x3000}}},
+                {STT_MAGIC_ITEM, {{230, 0x3000}, {230, 0x3403}, {231, 0x3000}, {232, 0x3000}, {233, 0x3000}, {305, 0x3000}, {306, 0x3000}, {307, 0x3206}, {308, 0x3206}}},
+                {STT_MINIS, {{502, 0x3000}, {503, 0x3000}, {504, 0x3000}, {505, 0x3000}, {506, 0x3000}, {507, 0x3000}, {507, 0x3402}, {508, 0x3000}, {508, 0x3402}, {509, 0x3000}, {510, 0x3000}, {514, 0x3000}, {519, 0x3000}, {526, 0x3000}, {540, 0x3000}, {540, 0x3402}, {541, 0x3000}, {542, 0x3000}, {543, 0x3000}}},
+                {STT_TRAP_AIR, {{212, 0x3003}, {212, 0x3006}, {212, 0x300E}, {212, 0x3010}, {212, 0x3011}, {212, 0x3018}}},
+                {STT_TRAP_EARTH, {{216, 0x3003}, {216, 0x3004}, {216, 0x300A}, {216, 0x300E}, {216, 0x3012}, {216, 0x301A}}},
+                {STT_TRAP_FIRE, {{215, 0x3005}, {215, 0x3009}, {215, 0x3011}, {215, 0x3012}, {215, 0x3017}, {215, 0x301B}}},
+                {STT_TRAP_WATER, {{211, 0x3001}, {211, 0x3002}, {211, 0x3006}, {211, 0x3007}, {211, 0x300B}, {211, 0x3016}, {211, 0x3406}}},
+                {STT_TRAP_MAGIC, {{210, 0x3002}, {210, 0x3008}, {210, 0x300B}, {210, 0x300E}, {210, 0x3012}, {210, 0x3015}}},
+                {STT_TRAP_TECH, {{214, 0x3001}, {214, 0x3007}, {214, 0x3009}, {214, 0x300C}, {214, 0x3016}, {214, 0x301A}}},
+                {STT_TRAP_LIFE, {{217, 0x3001}, {217, 0x3005}, {217, 0x300A}, {217, 0x3010}, {217, 0x3018}, {217, 0x301B}}},
+                {STT_TRAP_UNDEAD, {{213, 0x3004}, {213, 0x3008}, {213, 0x300B}, {213, 0x300C}, {213, 0x3010}, {213, 0x3017}, {213, 0x3404}, {213, 0x3408}}},
+                {STT_TRAP_LIGHT, {{219, 0x300F}, {219, 0x3015}, {219, 0x301B}}},
+                {STT_TRAP_DARK, {{218, 0x3014}, {218, 0x3018}, {218, 0x301A}}},
+                {STT_TRAP_KAOS, {{220, 0x301E}, {220, 0x351F}}},
+                {SSC_CHAR_AIR, {{3406, 0x4100}, {3413, 0x4100}, {3413, 0x4503}}},
+                {SSC_CHAR_EARTH, {{3411, 0x4100}, {3411, 0x4502}, {3416, 0x4100}}},
+                {SSC_CHAR_FIRE, {{3412, 0x4100}, {3412, 0x4502}, {3421, 0x4100}, {3424, 0x4100}, {3424, 0x4502}}},
+                {SSC_CHAR_WATER, {{3422, 0x4100}, {3425, 0x4100}, {3425, 0x450E}}},
+                {SSC_CHAR_MAGIC, {{3402, 0x4100}, {3402, 0x4502}, {3420, 0x4100}, {3420, 0x450E}}},
+                {SSC_CHAR_TECH, {{3401, 0x4100}, {3414, 0x4100}, {3414, 0x4502}}},
+                {SSC_CHAR_LIFE, {{3415, 0x4100}, {3415, 0x4502}, {3423, 0x4100}, {3423, 0x4502}, {3428, 0x4100}, {3428, 0x450D}}},
+                {SSC_CHAR_UNDEAD, {{3400, 0x4100}, {3400, 0x4515}, {3417, 0x4100}, {3417, 0x4503}}},
+                {SSC_CHAR_LIGHT, {{3426, 0x4100}, {3426, 0x4503}}},
+                {SSC_CHAR_DARK, {{3427, 0x4100}}},
+                {SSC_VEHICLE_AIR, {{3220, 0x4000}, {3228, 0x4000}, {3228, 0x4402}, {3232, 0x4000}, {3233, 0x4000}, {3233, 0x4402}, {3236, 0x4000}, {3236, 0x4403}, {3241, 0x4000}}},
+                {SSC_VEHICLE_LAND, {{3221, 0x4000}, {3223, 0x4000}, {3224, 0x4000}, {3224, 0x4004}, {3224, 0x411F}, {3224, 0x4402}, {3225, 0x4000}, {3226, 0x4000}, {3227, 0x4000}, {3234, 0x4000}, {3234, 0x4402}, {3235, 0x4000}, {3240, 0x4000}, {3240, 0x4402}}},
+                {SSC_VEHICLE_SEA, {{3222, 0x4000}, {3231, 0x4000}, {3231, 0x4402}, {3237, 0x4000}, {3237, 0x4402}, {3238, 0x4000}, {3238, 0x4402}, {3239, 0x4000}, {3239, 0x4402}}},
+                {SSC_TROPHIES, {{3500, 0x4000}, {3501, 0x4000}, {3502, 0x4000}, {3503, 0x4000}}},
+};
 
 SkylanderUSBDevice::SkylanderUSBDevice() : Device(0x3014, 0x5001, 0, 0, 0, 0x0040, 0x0040) {
 }
@@ -999,6 +1080,69 @@ bool SkylanderPortal::RemoveSkylander(uint8_t skyNum) {
     return false;
 }
 
+bool SkylanderPortal::CreateSkylander(std::string pathName, uint16_t skyId, uint16_t skyVar) {
+    std::ofstream skyFile(pathName.c_str(), std::ios::binary);
+    if (!skyFile) {
+        return false;
+    }
+
+    std::array<uint8_t, SKY_FIGURE_SIZE> data{};
+
+    uint32_t first_block  = 0x690F0F0F;
+    uint32_t other_blocks = 0x69080F7F;
+    memcpy(&data[0x36], &first_block, sizeof(first_block));
+    for (size_t index = 1; index < 0x10; index++) {
+        memcpy(&data[(index * 0x40) + 0x36], &other_blocks, sizeof(other_blocks));
+    }
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_int_distribution<int> dist(0, 255);
+    data[0] = dist(mt);
+    data[1] = dist(mt);
+    data[2] = dist(mt);
+    data[3] = dist(mt);
+    data[4] = data[0] ^ data[1] ^ data[2] ^ data[3];
+    data[5] = 0x81;
+    data[6] = 0x01;
+    data[7] = 0x0F;
+
+    memcpy(&data[0x10], &skyId, sizeof(skyId));
+    memcpy(&data[0x1C], &skyVar, sizeof(skyVar));
+
+    uint16_t crc = SkylanderCRC16(0xFFFF, data.data(), 0x1E);
+
+    memcpy(&data[0x1E], &crc, sizeof(crc));
+
+    skyFile.write((char *) data.data(), data.size());
+
+    skyFile.close();
+
+    return true;
+}
+
+uint16_t SkylanderPortal::SkylanderCRC16(uint16_t initValue, const uint8_t *buffer, uint32_t size) {
+    const unsigned short CRC_CCITT_TABLE[256] = {0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5, 0x60C6, 0x70E7, 0x8108, 0x9129, 0xA14A, 0xB16B, 0xC18C, 0xD1AD, 0xE1CE, 0xF1EF, 0x1231, 0x0210, 0x3273,
+                                                 0x2252, 0x52B5, 0x4294, 0x72F7, 0x62D6, 0x9339, 0x8318, 0xB37B, 0xA35A, 0xD3BD, 0xC39C, 0xF3FF, 0xE3DE, 0x2462, 0x3443, 0x0420, 0x1401, 0x64E6, 0x74C7, 0x44A4, 0x5485, 0xA56A, 0xB54B, 0x8528,
+                                                 0x9509, 0xE5EE, 0xF5CF, 0xC5AC, 0xD58D, 0x3653, 0x2672, 0x1611, 0x0630, 0x76D7, 0x66F6, 0x5695, 0x46B4, 0xB75B, 0xA77A, 0x9719, 0x8738, 0xF7DF, 0xE7FE, 0xD79D, 0xC7BC, 0x48C4, 0x58E5, 0x6886,
+                                                 0x78A7, 0x0840, 0x1861, 0x2802, 0x3823, 0xC9CC, 0xD9ED, 0xE98E, 0xF9AF, 0x8948, 0x9969, 0xA90A, 0xB92B, 0x5AF5, 0x4AD4, 0x7AB7, 0x6A96, 0x1A71, 0x0A50, 0x3A33, 0x2A12, 0xDBFD, 0xCBDC, 0xFBBF,
+                                                 0xEB9E, 0x9B79, 0x8B58, 0xBB3B, 0xAB1A, 0x6CA6, 0x7C87, 0x4CE4, 0x5CC5, 0x2C22, 0x3C03, 0x0C60, 0x1C41, 0xEDAE, 0xFD8F, 0xCDEC, 0xDDCD, 0xAD2A, 0xBD0B, 0x8D68, 0x9D49, 0x7E97, 0x6EB6, 0x5ED5,
+                                                 0x4EF4, 0x3E13, 0x2E32, 0x1E51, 0x0E70, 0xFF9F, 0xEFBE, 0xDFDD, 0xCFFC, 0xBF1B, 0xAF3A, 0x9F59, 0x8F78, 0x9188, 0x81A9, 0xB1CA, 0xA1EB, 0xD10C, 0xC12D, 0xF14E, 0xE16F, 0x1080, 0x00A1, 0x30C2,
+                                                 0x20E3, 0x5004, 0x4025, 0x7046, 0x6067, 0x83B9, 0x9398, 0xA3FB, 0xB3DA, 0xC33D, 0xD31C, 0xE37F, 0xF35E, 0x02B1, 0x1290, 0x22F3, 0x32D2, 0x4235, 0x5214, 0x6277, 0x7256, 0xB5EA, 0xA5CB, 0x95A8,
+                                                 0x8589, 0xF56E, 0xE54F, 0xD52C, 0xC50D, 0x34E2, 0x24C3, 0x14A0, 0x0481, 0x7466, 0x6447, 0x5424, 0x4405, 0xA7DB, 0xB7FA, 0x8799, 0x97B8, 0xE75F, 0xF77E, 0xC71D, 0xD73C, 0x26D3, 0x36F2, 0x0691,
+                                                 0x16B0, 0x6657, 0x7676, 0x4615, 0x5634, 0xD94C, 0xC96D, 0xF90E, 0xE92F, 0x99C8, 0x89E9, 0xB98A, 0xA9AB, 0x5844, 0x4865, 0x7806, 0x6827, 0x18C0, 0x08E1, 0x3882, 0x28A3, 0xCB7D, 0xDB5C, 0xEB3F,
+                                                 0xFB1E, 0x8BF9, 0x9BD8, 0xABBB, 0xBB9A, 0x4A75, 0x5A54, 0x6A37, 0x7A16, 0x0AF1, 0x1AD0, 0x2AB3, 0x3A92, 0xFD2E, 0xED0F, 0xDD6C, 0xCD4D, 0xBDAA, 0xAD8B, 0x9DE8, 0x8DC9, 0x7C26, 0x6C07, 0x5C64,
+                                                 0x4C45, 0x3CA2, 0x2C83, 0x1CE0, 0x0CC1, 0xEF1F, 0xFF3E, 0xCF5D, 0xDF7C, 0xAF9B, 0xBFBA, 0x8FD9, 0x9FF8, 0x6E17, 0x7E36, 0x4E55, 0x5E74, 0x2E93, 0x3EB2, 0x0ED1, 0x1EF0};
+
+    uint16_t crc = initValue;
+
+    for (uint32_t i = 0; i < size; i++) {
+        const uint16_t tmp = (crc >> 8) ^ buffer[i];
+        crc                = (crc << 8) ^ CRC_CCITT_TABLE[tmp];
+    }
+
+    return crc;
+}
+
 std::string SkylanderPortal::FindSkylander(uint16_t skyId, uint16_t skyVar) {
     for (const auto &it : GetListSkylanders()) {
         if (it.first.first == skyId && it.first.second == skyVar) {
@@ -1010,6 +1154,14 @@ std::string SkylanderPortal::FindSkylander(uint16_t skyId, uint16_t skyVar) {
 
 std::map<const std::pair<const uint16_t, const uint16_t>, const char *> SkylanderPortal::GetListSkylanders() {
     return s_listSkylanders;
+}
+
+std::vector<std::pair<const uint16_t, const uint16_t>> SkylanderPortal::GetSkylandersForFolder(const SubFolder &folder) {
+    const auto &it = s_skylanderUIList.find(folder);
+    if (it != s_skylanderUIList.end()) {
+        return it->second;
+    }
+    return {};
 }
 
 std::string SkylanderPortal::GetSkylanderFromUISlot(uint8_t uiSlot) {
