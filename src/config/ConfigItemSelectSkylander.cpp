@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <dirent.h>
+#include <filesystem>
 #include <sstream>
 #include <sys/stat.h>
 
@@ -109,7 +110,7 @@ static void saveFavorites(ConfigItemSelectSkylander *item) {
     }
 
     // Store the favorites with ":" as the path separator
-    // Strip the rootPath (/vol/external01/wiiu/re_nfpii) prefix
+    // Strip the rootPath (/vol/external01/wiiu/re_nsyshid) prefix
     // In the end everything is stored as one string like "amiibo1.bin:folder1/amiibo2.bin:folder2/amiibo3.bin"
     std::string saveBuf;
     for (const auto &fav : favorites) {
@@ -280,12 +281,15 @@ static void enterCreationMenu(ConfigItemSelectSkylander *item) {
     }
 
     item->createFolder = new CreateFolder{SubFolder::TOP, nullptr, nullptr};
+    item->currentPath  = item->rootPath + "Skylanders";
+    std::filesystem::create_directory(item->currentPath);
+    item->currentPath += "/";
 
     while (true) {
         entries.clear();
 
         // Add top entry
-        if (item->currentPath != item->rootPath) {
+        if (item->currentPath != item->rootPath + "Skylanders/") {
             entries.push_back(ListEntry{"..", LIST_ENTRY_TYPE_TOP});
         }
 
@@ -377,11 +381,10 @@ static void enterCreationMenu(ConfigItemSelectSkylander *item) {
                     item->selectedSkylander = item->currentPath + currentEntry.name + ".sky";
                     redraw                  = true;
                 } else if (currentEntry.type == LIST_ENTRY_TYPE_DIR) {
-                    item->currentPath += currentEntry.name + "/";
-                    if (!item->createFolder->next) {
-                        // create a new folder
-                        item->createFolder->next = new CreateFolder{currentEntry.createFolder, nullptr, item->createFolder};
-                    }
+                    item->currentPath += currentEntry.name;
+                    std::filesystem::create_directory(item->currentPath);
+                    item->currentPath += "/";
+                    item->createFolder->next = new CreateFolder{currentEntry.createFolder, nullptr, item->createFolder};
                     // go into the next folder
                     item->createFolder = item->createFolder->next;
                     break;
@@ -403,11 +406,14 @@ static void enterCreationMenu(ConfigItemSelectSkylander *item) {
                         // no skylander selected, just return
                         return;
                     }
-                    g_skyportal.CreateSkylander(item->selectedSkylander, item->skylanderId.first, item->skylanderId.second);
+                    if (g_skyportal.CreateSkylander(item->selectedSkylander, item->skylanderId.first, item->skylanderId.second)) {
+                        ConfigItemSelectSkylander_callCallback(item);
+                    }
                     return;
                 }
                 // go one dir up for any other path
                 item->createFolder = item->createFolder->prev;
+                item->currentPath  = item->currentPath.substr(0, item->currentPath.find_last_of("/", item->currentPath.length() - 2) + 1);
                 break;
             }
 
@@ -417,7 +423,9 @@ static void enterCreationMenu(ConfigItemSelectSkylander *item) {
                     // no skylander selected, just return
                     return;
                 }
-                g_skyportal.CreateSkylander(item->selectedSkylander, item->skylanderId.first, item->skylanderId.second);
+                if (g_skyportal.CreateSkylander(item->selectedSkylander, item->skylanderId.first, item->skylanderId.second)) {
+                    ConfigItemSelectSkylander_callCallback(item);
+                }
                 return;
             }
 
@@ -481,7 +489,7 @@ static void enterCreationMenu(ConfigItemSelectSkylander *item) {
 
                 // draw top bar
                 DrawUtils::setFontSize(24);
-                DrawUtils::print(16, 6 + 24, "re_nsyshid - Select Skylander");
+                DrawUtils::print(16, 6 + 24, "re_nsyshid - Create Skylander");
                 DrawUtils::setFontSize(18);
                 std::string path = item->currentPath.c_str();
                 // remove root path
@@ -497,7 +505,7 @@ static void enterCreationMenu(ConfigItemSelectSkylander *item) {
                 DrawUtils::drawRectFilled(8, SCREEN_HEIGHT - 24 - 8 - 4, SCREEN_WIDTH - 8 * 2, 3, COLOR_BLACK);
                 DrawUtils::setFontSize(18);
                 DrawUtils::print(16, SCREEN_HEIGHT - 10, "\ue07d Navigate ");
-                DrawUtils::print(SCREEN_WIDTH - 16, SCREEN_HEIGHT - 10, "\ue002 Favorite / \ue000 Select", true);
+                DrawUtils::print(SCREEN_WIDTH - 16, SCREEN_HEIGHT - 10, "\ue000 Select", true);
 
                 // draw scroll indicators
                 DrawUtils::setFontSize(24);

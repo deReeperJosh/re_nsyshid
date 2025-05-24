@@ -140,6 +140,7 @@ WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle ro
 
         auto skylanderCategory = WUPSConfigCategory::Create("Skylander Manager");
         skylanderCategory.add(WUPSConfigItemStub::Create("Press \ue002 to Remove Skylander From Slot"));
+        skylanderCategory.add(WUPSConfigItemStub::Create("Press \ue003 to Create Skylander In Slot"));
         for (int i = 0; i < 16; i++) {
             char *currentPath    = new char[1024];
             WUPSStorageError err = WUPSStorageAPI_GetString(nullptr, ("currentSkylanderPath" + std::to_string(i)).c_str(), currentPath, 1024, nullptr);

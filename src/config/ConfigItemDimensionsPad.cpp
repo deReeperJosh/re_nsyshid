@@ -131,7 +131,7 @@ static void saveFavorites(ConfigItemDimensionsPad *item) {
     }
 
     // Store the favorites with ":" as the path separator
-    // Strip the rootPath (/vol/external01/wiiu/re_nfpii) prefix
+    // Strip the rootPath (/vol/external01/wiiu/re_nsyshid) prefix
     // In the end everything is stored as one string like "amiibo1.bin:folder1/amiibo2.bin:folder2/amiibo3.bin"
     std::string saveBuf;
     for (const auto &fav : favorites) {

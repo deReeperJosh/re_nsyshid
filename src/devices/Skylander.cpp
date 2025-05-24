@@ -1088,8 +1088,8 @@ bool SkylanderPortal::CreateSkylander(std::string pathName, uint16_t skyId, uint
 
     std::array<uint8_t, SKY_FIGURE_SIZE> data{};
 
-    uint32_t first_block  = 0x690F0F0F;
-    uint32_t other_blocks = 0x69080F7F;
+    uint32_t first_block  = 0x0F0F0F69;
+    uint32_t other_blocks = 0x7F0F0869;
     memcpy(&data[0x36], &first_block, sizeof(first_block));
     for (size_t index = 1; index < 0x10; index++) {
         memcpy(&data[(index * 0x40) + 0x36], &other_blocks, sizeof(other_blocks));
@@ -1106,12 +1106,15 @@ bool SkylanderPortal::CreateSkylander(std::string pathName, uint16_t skyId, uint
     data[6] = 0x01;
     data[7] = 0x0F;
 
-    memcpy(&data[0x10], &skyId, sizeof(skyId));
-    memcpy(&data[0x1C], &skyVar, sizeof(skyVar));
+    data[0x10] = uint8_t(skyId & 0xFF);
+    data[0x11] = uint8_t((skyId >> 8) & 0xFF);
+    data[0x1C] = uint8_t(skyVar & 0xFF);
+    data[0x1D] = uint8_t((skyVar >> 8) & 0xFF);
 
     uint16_t crc = SkylanderCRC16(0xFFFF, data.data(), 0x1E);
 
-    memcpy(&data[0x1E], &crc, sizeof(crc));
+    data[0x1E] = uint8_t(crc & 0xFF);
+    data[0x1F] = uint8_t((crc >> 8) & 0xFF);
 
     skyFile.write((char *) data.data(), data.size());
 
