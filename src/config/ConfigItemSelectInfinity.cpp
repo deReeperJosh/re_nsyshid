@@ -135,7 +135,6 @@ static void saveFavorites(ConfigItemSelectInfinity *item) {
 static void enterSelectionMenu(ConfigItemSelectInfinity *item) {
     std::vector<ListEntry> entries;
     bool highlightSelected = true;
-    bool openTidFolder     = true;
 
     // Init DrawUtils
     DrawUtils::initBuffers();
@@ -144,7 +143,6 @@ static void enterSelectionMenu(ConfigItemSelectInfinity *item) {
     }
 
     while (true) {
-    refresh:;
         entries.clear();
 
         // Add top entry
@@ -182,25 +180,6 @@ static void enterSelectionMenu(ConfigItemSelectInfinity *item) {
             DEBUG_FUNCTION_LINE("Cannot open '%s'", item->currentPath.c_str());
             return;
         }
-
-        // check if there is a folder in the root which starts with the current TID
-        if (openTidFolder && item->currentPath == item->rootPath) {
-            uint64_t titleId = OSGetTitleID();
-            char titleIdString[17];
-            snprintf(titleIdString, sizeof(titleIdString), "%016llx", titleId);
-
-            for (ListEntry &e : entries) {
-                if (e.type == LIST_ENTRY_TYPE_DIR) {
-                    if (strncasecmp(e.name.c_str(), titleIdString, 16) == 0) {
-                        // open it if there is
-                        item->currentPath += e.name + "/";
-                        openTidFolder = false;
-                        goto refresh;
-                    }
-                }
-            }
-        }
-        openTidFolder = false;
 
         // sort files
         std::sort(entries.begin(), entries.end(),
@@ -480,6 +459,8 @@ static void ConfigItemSelectInfinity_onInput(void *context, WUPSConfigSimplePadD
     } else if ((input.buttons_d & WUPS_CONFIG_BUTTON_X) == WUPS_CONFIG_BUTTON_X) {
         g_infinitybase.RemoveFigure(item->slot);
         item->selectedFigure.clear();
+    } else if ((input.buttons_d & WUPS_CONFIG_BUTTON_Y) == WUPS_CONFIG_BUTTON_Y) {
+        // create a new figure
     }
 }
 

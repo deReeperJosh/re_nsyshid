@@ -4,10 +4,20 @@
 
 #include <wups.h>
 
-#include <vector>
+#include <optional>
 #include <string>
+#include <vector>
+
+#include "../devices/Skylander.h"
 
 typedef void (*SkylanderSelectedCallback)(struct ConfigItemSelectSkylander*, const char* fileName, uint8_t slot);
+
+struct CreateFolder {
+    SubFolder subfolder;
+    
+    struct CreateFolder* next;
+    struct CreateFolder* prev;
+};
 
 struct ConfigItemSelectSkylander {
     char* configID;
@@ -19,6 +29,9 @@ struct ConfigItemSelectSkylander {
     std::string rootPath;
     std::string currentPath;
     std::string selectedSkylander;
+
+    struct CreateFolder* createFolder;
+    std::pair<uint16_t, uint16_t> skylanderId; // skylander id and variant
 };
 
 std::vector<std::string>& ConfigItemSelectSkylander_GetFavorites(void);

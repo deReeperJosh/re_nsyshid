@@ -8,6 +8,99 @@
 #include <queue>
 #include <stdio.h>
 
+
+enum SubFolder {
+    TOP,
+    SSA,
+    SSA_CHAR,
+    SSA_CHAR_AIR,
+    SSA_CHAR_EARTH,
+    SSA_CHAR_FIRE,
+    SSA_CHAR_LIFE,
+    SSA_CHAR_MAGIC,
+    SSA_CHAR_TECH,
+    SSA_CHAR_UNDEAD,
+    SSA_CHAR_WATER,
+    SSA_MAGIC_ITEM,
+    SSA_SIDEKICK,
+    SG,
+    SG_GIANTS,
+    SG_CHAR,
+    SG_CHAR_AIR,
+    SG_CHAR_EARTH,
+    SG_CHAR_FIRE,
+    SG_CHAR_LIFE,
+    SG_CHAR_MAGIC,
+    SG_CHAR_TECH,
+    SG_CHAR_UNDEAD,
+    SG_CHAR_WATER,
+    SG_MAGIC_ITEM,
+    SG_SIDEKICK,
+    SSF,
+    SSF_SWAPPERS,
+    SSF_SWAP_AIR,
+    SSF_SWAP_EARTH,
+    SSF_SWAP_FIRE,
+    SSF_SWAP_WATER,
+    SSF_SWAP_MAGIC,
+    SSF_SWAP_TECH,
+    SSF_SWAP_LIFE,
+    SSF_SWAP_UNDEAD,
+    SSF_CHAR,
+    SSF_CHAR_AIR,
+    SSF_CHAR_EARTH,
+    SSF_CHAR_FIRE,
+    SSF_CHAR_LIFE,
+    SSF_CHAR_MAGIC,
+    SSF_CHAR_TECH,
+    SSF_CHAR_UNDEAD,
+    SSF_CHAR_WATER,
+    SSF_MAGIC_ITEM,
+    STT,
+    STT_CHAR,
+    STT_CHAR_AIR,
+    STT_CHAR_DARK,
+    STT_CHAR_EARTH,
+    STT_CHAR_FIRE,
+    STT_CHAR_LIFE,
+    STT_CHAR_LIGHT,
+    STT_CHAR_MAGIC,
+    STT_CHAR_TECH,
+    STT_CHAR_UNDEAD,
+    STT_CHAR_WATER,
+    STT_MAGIC_ITEM,
+    STT_MINIS,
+    STT_TRAPS,
+    STT_TRAP_AIR,
+    STT_TRAP_DARK,
+    STT_TRAP_EARTH,
+    STT_TRAP_FIRE,
+    STT_TRAP_LIFE,
+    STT_TRAP_LIGHT,
+    STT_TRAP_MAGIC,
+    STT_TRAP_TECH,
+    STT_TRAP_UNDEAD,
+    STT_TRAP_WATER,
+    STT_TRAP_KAOS,
+    SSC,
+    SSC_VEHICLES,
+    SSC_VEHICLE_AIR,
+    SSC_VEHICLE_LAND,
+    SSC_VEHICLE_SEA,
+    SSC_CHAR,
+    SSC_CHAR_AIR,
+    SSC_CHAR_DARK,
+    SSC_CHAR_EARTH,
+    SSC_CHAR_FIRE,
+    SSC_CHAR_LIFE,
+    SSC_CHAR_LIGHT,
+    SSC_CHAR_MAGIC,
+    SSC_CHAR_TECH,
+    SSC_CHAR_UNDEAD,
+    SSC_CHAR_WATER,
+    SSC_TROPHIES,
+};
+
 class SkylanderUSBDevice : public Device {
 public:
     SkylanderUSBDevice(/* args */);
@@ -98,7 +191,10 @@ public:
     bool LoadSkylander(uint8_t *buf, FILE *file, uint8_t uiSlot);
     uint8_t LoadSkylander(uint8_t *buf, FILE *file);
     bool RemoveSkylander(uint8_t skyNum);
+    bool CreateSkylander(std::string pathName, uint16_t skyId, uint16_t skyVar);
+    uint16_t SkylanderCRC16(uint16_t initValue, const uint8_t *buffer, uint32_t size);
     static std::map<const std::pair<const uint16_t, const uint16_t>, const char *> GetListSkylanders();
+    static std::vector<std::pair<const uint16_t, const uint16_t>> GetSkylandersForFolder(const SubFolder &folder);
     std::string FindSkylander(uint16_t skyId, uint16_t skyVar);
 
     std::string GetSkylanderFromUISlot(uint8_t uiSlot);

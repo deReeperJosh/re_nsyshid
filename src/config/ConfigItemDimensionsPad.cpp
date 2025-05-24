@@ -131,7 +131,7 @@ static void saveFavorites(ConfigItemDimensionsPad *item) {
     }
 
     // Store the favorites with ":" as the path separator
-    // Strip the rootPath (/vol/external01/wiiu/re_nfpii) prefix
+    // Strip the rootPath (/vol/external01/wiiu/re_nsyshid) prefix
     // In the end everything is stored as one string like "amiibo1.bin:folder1/amiibo2.bin:folder2/amiibo3.bin"
     std::string saveBuf;
     for (const auto &fav : favorites) {
@@ -158,7 +158,6 @@ static void saveFavorites(ConfigItemDimensionsPad *item) {
 static void enterSelectionMenu(ConfigItemDimensionsPad *item, uint8_t index) {
     std::vector<ListEntry> entries;
     bool highlightSelected = true;
-    bool openTidFolder     = true;
 
     // Init DrawUtils
     DrawUtils::initBuffers();
@@ -167,7 +166,6 @@ static void enterSelectionMenu(ConfigItemDimensionsPad *item, uint8_t index) {
     }
 
     while (true) {
-    refresh:;
         entries.clear();
 
         // Add top entry
@@ -205,25 +203,6 @@ static void enterSelectionMenu(ConfigItemDimensionsPad *item, uint8_t index) {
             DEBUG_FUNCTION_LINE("Cannot open '%s'", item->currentPath.c_str());
             return;
         }
-
-        // check if there is a folder in the root which starts with the current TID
-        if (openTidFolder && item->currentPath == item->rootPath) {
-            uint64_t titleId = OSGetTitleID();
-            char titleIdString[17];
-            snprintf(titleIdString, sizeof(titleIdString), "%016llx", titleId);
-
-            for (ListEntry &e : entries) {
-                if (e.type == LIST_ENTRY_TYPE_DIR) {
-                    if (strncasecmp(e.name.c_str(), titleIdString, 16) == 0) {
-                        // open it if there is
-                        item->currentPath += e.name + "/";
-                        openTidFolder = false;
-                        goto refresh;
-                    }
-                }
-            }
-        }
-        openTidFolder = false;
 
         // sort files
         std::sort(entries.begin(), entries.end(),
@@ -664,6 +643,12 @@ static void enterToypadMenu(ConfigItemDimensionsPad *item) {
                 redraw          = true;
             } else {
                 return;
+            }
+        }
+
+        if (buttonsTriggered & VPAD_BUTTON_Y) {
+            if (!item->moveIndex) {
+                // create a new figure
             }
         }
 
