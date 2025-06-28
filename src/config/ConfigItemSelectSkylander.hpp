@@ -12,13 +12,6 @@
 
 typedef void (*SkylanderSelectedCallback)(struct ConfigItemSelectSkylander*, const char* fileName, uint8_t slot);
 
-struct CreateFolder {
-    SubFolder subfolder;
-    
-    struct CreateFolder* next;
-    struct CreateFolder* prev;
-};
-
 struct ConfigItemSelectSkylander {
     char* configID;
     WUPSConfigItemHandle handle;

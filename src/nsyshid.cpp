@@ -147,7 +147,7 @@ DECL_FUNCTION(int32_t, HIDAddClient, HIDClient *client, HIDAttachCallback attach
         if (deviceToEmulate == DeviceToEmulate::SKYLANDER) {
             DEBUG_FUNCTION_LINE_INFO("adding emulated skylander portal");
             HIDDevice *devicePtr;
-            auto skylanderDevice = std::make_shared<SkylanderUSBDevice>();
+            auto skylanderDevice = std::make_shared<Skylander::SkylanderUSBDevice>();
             devicePtr            = GetFreeHID();
             if (devicePtr == nullptr) {
                 return 0;
@@ -160,7 +160,7 @@ DECL_FUNCTION(int32_t, HIDAddClient, HIDClient *client, HIDAttachCallback attach
         } else if (deviceToEmulate == DeviceToEmulate::INFINITY) {
             DEBUG_FUNCTION_LINE_INFO("adding emulated infinity base");
             HIDDevice *devicePtr;
-            auto infinityDevice = std::make_shared<InfinityUSBDevice>();
+            auto infinityDevice = std::make_shared<Infinity::InfinityUSBDevice>();
             devicePtr           = GetFreeHID();
             if (devicePtr == nullptr) {
                 return 0;
