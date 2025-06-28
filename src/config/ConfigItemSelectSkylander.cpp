@@ -24,6 +24,8 @@
 #include "dir_icon.inc"
 #include "fav_icon.inc"
 
+using namespace Skylander;
+
 #define COLOR_BACKGROUND         Color(238, 238, 238, 255)
 #define COLOR_TEXT               Color(51, 51, 51, 255)
 #define COLOR_TEXT2              Color(72, 72, 72, 255)
@@ -46,6 +48,13 @@ enum ListEntryType {
     LIST_ENTRY_TYPE_FILE,
     LIST_ENTRY_TYPE_DIR,
     LIST_ENTRY_TYPE_TOP,
+};
+
+struct CreateFolder {
+    SubFolder subfolder;
+    
+    struct CreateFolder* next;
+    struct CreateFolder* prev;
 };
 
 struct ListEntry {
