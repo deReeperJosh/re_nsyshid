@@ -151,6 +151,7 @@ private:
 
     bool m_isAwake = false;
     bool m_wasLastRespFigure = false;
+    uint8_t m_noResponseCount = 0;
 
     std::queue<std::array<uint8_t, 32>> m_figureAddedRemovedResponses;
     std::queue<std::array<uint8_t, 32>> m_queries;
