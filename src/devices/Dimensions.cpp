@@ -1046,6 +1046,7 @@ bool DimensionsToypad::RemoveFigure(uint8_t pad, uint8_t index, bool fullRemove)
         m_figureAddedRemovedResponses.push(figureChangeResponse);
         figure.Save();
         fclose(figure.dimFile);
+        delete figure.dimFile;
     }
 
     figure.index = 255;

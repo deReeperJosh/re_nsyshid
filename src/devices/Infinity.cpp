@@ -675,6 +675,7 @@ bool InfinityBase::RemoveFigure(uint8_t position) {
         figure.figNum = 0;
         figure.Save();
         fclose(figure.infFile);
+        delete figure.infFile;
         figure.present = false;
 
         position = DeriveFigurePosition(position);
