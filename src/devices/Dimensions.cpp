@@ -521,13 +521,16 @@ std::array<uint8_t, 32> DimensionsToypad::GetStatus() {
             m_queries.pop();
             responded           = true;
             m_wasLastRespFigure = false;
-        } else if (!m_figureAddedRemovedResponses.empty() && m_isAwake && !m_wasLastRespFigure) {
+            m_noResponseCount = 0;
+        } else if (!m_figureAddedRemovedResponses.empty() && m_isAwake && (!m_wasLastRespFigure || m_noResponseCount >= 10)) {
             std::lock_guard lock(m_dimensionsMutex);
             response = m_figureAddedRemovedResponses.front();
             m_figureAddedRemovedResponses.pop();
             responded           = true;
             m_wasLastRespFigure = true;
+            m_noResponseCount = 0;
         } else {
+            m_noResponseCount++;
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     } while (responded == false);
