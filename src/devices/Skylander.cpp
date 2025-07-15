@@ -1073,6 +1073,7 @@ bool SkylanderPortal::RemoveSkylander(uint8_t skyNum) {
         thesky.queuedStatus.push(Skylander::REMOVED);
         thesky.Save();
         fclose(thesky.skyFile);
+        delete thesky.skyFile;
         m_skylanderUIPositions[skyNum] = std::nullopt;
         return true;
     }
