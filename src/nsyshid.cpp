@@ -17,6 +17,7 @@
 #include "devices/Device.h"
 #include "devices/Dimensions.h"
 #include "devices/Infinity.h"
+#include "devices/KamenRider.h"
 #include "devices/Skylander.h"
 #include "re_nsyshid.h"
 #include "utils/logger.h"
@@ -143,7 +144,8 @@ DECL_FUNCTION(int32_t, HIDAddClient, HIDClient *client, HIDAttachCallback attach
     if (!m_device ||
         (deviceToEmulate == DeviceToEmulate::SKYLANDER && (m_device->m_vendorId != 0x3014 && m_device->m_productId != 0x5001)) ||
         (deviceToEmulate == DeviceToEmulate::INFINITY && (m_device->m_vendorId != 0x6F0E && m_device->m_productId != 0x2901)) ||
-        (deviceToEmulate == DeviceToEmulate::DIMENSIONS && (m_device->m_vendorId != 0x6F0E && m_device->m_productId != 0x4102))) {
+        (deviceToEmulate == DeviceToEmulate::DIMENSIONS && (m_device->m_vendorId != 0x6F0E && m_device->m_productId != 0x4102)) ||
+        (deviceToEmulate == DeviceToEmulate::KAMENRIDER && (m_device->m_vendorId != 0x6F0E && m_device->m_productId != 0x0A20))) {
         if (deviceToEmulate == DeviceToEmulate::SKYLANDER) {
             DEBUG_FUNCTION_LINE_INFO("adding emulated skylander portal");
             HIDDevice *devicePtr;
@@ -182,6 +184,19 @@ DECL_FUNCTION(int32_t, HIDAddClient, HIDClient *client, HIDAttachCallback attach
             dimensionsDevice->AssignHID(devicePtr);
             deviceMutex.lock();
             m_device = dimensionsDevice;
+            deviceMutex.unlock();
+        } else if (deviceToEmulate == DeviceToEmulate::KAMENRIDER) {
+            DEBUG_FUNCTION_LINE_INFO("adding emulated kamen rider gate");
+            HIDDevice *devicePtr;
+            auto riderGateDevice = std::make_shared<KamenRiderUSBDevice>();
+            devicePtr           = GetFreeHID();
+            if (devicePtr == nullptr) {
+                return 0;
+            }
+            devicePtr->handle = GenerateHIDHandle();
+            riderGateDevice->AssignHID(devicePtr);
+            deviceMutex.lock();
+            m_device = riderGateDevice;
             deviceMutex.unlock();
         }
     }

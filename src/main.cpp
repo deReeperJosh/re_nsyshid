@@ -1,17 +1,14 @@
 #include "utils/logger.h"
 #include <coreinit/filesystem.h>
 #include <wups.h>
-#include <wups/button_combo/api.h>
 #include <wups/config/WUPSConfigCategory.h>
-#include <wups/config/WUPSConfigItemBoolean.h>
-#include <wups/config/WUPSConfigItemButtonCombo.h>
-#include <wups/config/WUPSConfigItemIntegerRange.h>
 #include <wups/config/WUPSConfigItemMultipleValues.h>
 #include <wups/config/WUPSConfigItemStub.h>
 #include <wups/config_api.h>
 
 #include "config/ConfigItemDimensionsPad.hpp"
 #include "config/ConfigItemSelectInfinity.hpp"
+#include "config/ConfigItemSelectKamenRider.hpp"
 #include "config/ConfigItemSelectSkylander.hpp"
 #include "re_nsyshid.h"
 
@@ -32,14 +29,7 @@ WUPS_PLUGIN_VERSION(VERSION_STRING(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH))
 WUPS_PLUGIN_AUTHOR("deReeperJosh");
 WUPS_PLUGIN_LICENSE("GPLv2");
 
-#define LOG_FS_OPEN_CONFIG_ID             "logFSOpen"
-#define BUTTON_COMBO_PRESS_DOWN_CONFIG_ID "pressDownItem"
-#define BUTTON_COMBO_HOLD_CONFIG_ID       "holdItem"
-#define OTHER_EXAMPLE_BOOL_CONFIG_ID      "otherBoolItem"
-#define OTHER_EXAMPLE2_BOOL_CONFIG_ID     "other2BoolItem"
-#define INTEGER_RANGE_EXAMPLE_CONFIG_ID   "intRangeExample"
-
-#define TAG_EMULATION_PATH                std::string("/vol/external01/wiiu/re_nsyshid/")
+#define TAG_EMULATION_PATH std::string("/vol/external01/wiiu/re_nsyshid/")
 
 /**
     All of this defines can be used in ANY file.
@@ -84,6 +74,11 @@ static void infinityToySelectedCallback(ConfigItemSelectInfinity *infinity, cons
 static void dimensionsFigureSelectedCallback(ConfigItemDimensionsPad *dimensions, const char *filePath, uint8_t index) {
     DEBUG_FUNCTION_LINE_INFO("New dimensions toy selected: %d for %s", index, filePath);
     WUPSStorageAPI_StoreString(nullptr, ("currentDimensions" + std::to_string(index)).c_str(), filePath);
+}
+
+static void kamenRiderSelectedCallback(ConfigItemSelectKamenRider *dimensions, const char *filePath, uint8_t index) {
+    DEBUG_FUNCTION_LINE_INFO("New kamen rider toy selected: %d for %s", index, filePath);
+    WUPSStorageAPI_StoreString(nullptr, ("currentKamenRiderPath" + std::to_string(index)).c_str(), filePath);
 }
 
 WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle rootHandle) {
@@ -131,6 +126,7 @@ WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle ro
                 {SKYLANDER, "Emulate Skylander Portal"},
                 {INFINITY, "Emulate Infinity Base"},
                 {DIMENSIONS, "Emulate Dimensions Toypad"},
+                {KAMENRIDER, "Emulate Kamen Rider Gate"},
         };
 
         root.add(WUPSConfigItemMultipleValues::CreateFromValue(EMULATED_DEVICE_CONFIG_ID, "Device to Emulate",
@@ -176,6 +172,25 @@ WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle ro
         ConfigItemDimensionsPad_AddToCategory(dimensionsCategory.getHandle(), "dimensions_toypad", "Dimensions Toypad", TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), dimensionsFigureSelectedCallback);
 
         root.add(std::move(dimensionsCategory));
+
+        auto kamenRiderCategory = WUPSConfigCategory::Create("Kamen Rider Manager");
+        kamenRiderCategory.add(WUPSConfigItemStub::Create("Press \ue002 to Remove Kamen Rider From Slot"));
+        for (int i = 0; i < 8; i++) {
+            char *currentPath    = new char[1024];
+            WUPSStorageError err = WUPSStorageAPI_GetString(nullptr, ("currentKamenRiderPath" + std::to_string(i)).c_str(), currentPath, 1024, nullptr);
+            DEBUG_FUNCTION_LINE_VERBOSE("Adding kamen rider config: %d", i);
+            if (err == WUPS_STORAGE_ERROR_SUCCESS) {
+                if (!ConfigItemSelectKamenRider_AddToCategory(kamenRiderCategory.getHandle(), ("select_kamenrider" + std::to_string(i)).c_str(), ("Select Kamen Rider " + std::to_string(i + 1)).c_str(), i, TAG_EMULATION_PATH.c_str(), currentPath, kamenRiderSelectedCallback)) {
+                    return WUPSCONFIG_API_CALLBACK_RESULT_ERROR;
+                }
+            } else {
+                if (!ConfigItemSelectKamenRider_AddToCategory(kamenRiderCategory.getHandle(), ("select_kamenrider" + std::to_string(i)).c_str(), ("Select Kamen Rider " + std::to_string(i + 1)).c_str(), i, TAG_EMULATION_PATH.c_str(), TAG_EMULATION_PATH.c_str(), kamenRiderSelectedCallback)) {
+                    return WUPSCONFIG_API_CALLBACK_RESULT_ERROR;
+                }
+            }
+        }
+
+        root.add(std::move(kamenRiderCategory));
     } catch (std::exception &e) {
         DEBUG_FUNCTION_LINE_ERR("Creating config menu failed: %s", e.what());
         return WUPSCONFIG_API_CALLBACK_RESULT_ERROR;
