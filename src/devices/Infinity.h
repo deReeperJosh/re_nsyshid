@@ -60,7 +60,7 @@ constexpr uint8_t MAX_FIGURES      = 9;
 class InfinityBase {
 public:
     struct InfinityFigure final {
-        FILE *infFile;
+        std::string filePath;
         std::array<uint8_t, INF_FIGURE_SIZE> data{};
         bool present       = false;
         uint8_t orderAdded = 255;
@@ -85,7 +85,7 @@ public:
 
     bool RemoveFigure(uint8_t position);
     uint32_t LoadFigure(const std::array<uint8_t, INF_FIGURE_SIZE> &buf,
-                        FILE *file, uint8_t position);
+                        std::string file, uint8_t position);
     static std::map<const uint32_t, const std::pair<const uint8_t, const char *>> GetFigureList();
     std::pair<uint8_t, std::string> FindFigure(uint32_t figNum);
     uint32_t FindFigureFromSlot(uint8_t slot);

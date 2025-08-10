@@ -156,7 +156,7 @@ constexpr uint8_t MAX_SKYLANDERS   = 16;
 class SkylanderPortal {
 public:
     struct Skylander final {
-        FILE *skyFile;
+        std::string filePath;
         uint8_t status = 0;
         std::queue<uint8_t> queuedStatus;
         std::array<uint8_t, SKY_FIGURE_SIZE> data{};
@@ -188,8 +188,8 @@ public:
     void WriteBlock(uint8_t skyNum, uint8_t block, const uint8_t *toWriteBuf,
                     uint8_t *replyBuf);
 
-    bool LoadSkylander(uint8_t *buf, FILE *file, uint8_t uiSlot);
-    uint8_t LoadSkylander(uint8_t *buf, FILE *file);
+    bool LoadSkylander(uint8_t *buf, std::string file, uint8_t uiSlot);
+    uint8_t LoadSkylander(uint8_t *buf, std::string file);
     bool RemoveSkylander(uint8_t skyNum);
     bool CreateSkylander(std::string pathName, uint16_t skyId, uint16_t skyVar);
     uint16_t SkylanderCRC16(uint16_t initValue, const uint8_t *buffer, uint32_t size);

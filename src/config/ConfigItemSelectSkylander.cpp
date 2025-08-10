@@ -4,6 +4,7 @@
 
 #include "ConfigItemSelectSkylander.hpp"
 #include "utils/DrawUtils.hpp"
+#include "utils/FSUtils.hpp"
 #include "utils/input.h"
 #include "utils/logger.h"
 
@@ -823,20 +824,14 @@ static bool ConfigItemSelectSkylander_callCallback(void *context) {
     saveFavorites(item);
 
     if (item->callback && !item->selectedSkylander.empty()) {
-        FILE *skylanderFile = fopen(item->selectedSkylander.c_str(), "r+b");
-        if (!skylanderFile) {
-            DEBUG_FUNCTION_LINE_ERR("Failed to open Skylander file");
-        } else {
-            std::array<uint8_t, 0x10 * 0x40> fileData;
-            const size_t ret_code = fread(fileData.data(), sizeof(fileData[0]), fileData.size(), skylanderFile);
-            if (ret_code == fileData.size()) {
-                if (!g_skyportal.LoadSkylander(fileData.data(), std::move(skylanderFile), item->slot)) {
-                    DEBUG_FUNCTION_LINE_ERR("Failed to load skylander file");
-                }
-            } else {
-                DEBUG_FUNCTION_LINE_ERR("Skylander file too small");
-                fclose(skylanderFile);
+        std::array<uint8_t, 0x10 * 0x40> fileData;
+        int ret_code = FSUtils::ReadFromFile(item->selectedSkylander.c_str(), fileData.data(), fileData.size());
+        if (ret_code == fileData.size()) {
+            if (!g_skyportal.LoadSkylander(fileData.data(), item->selectedSkylander, item->slot)) {
+                DEBUG_FUNCTION_LINE_ERR("Failed to load skylander file");
             }
+        } else {
+            DEBUG_FUNCTION_LINE_ERR("Skylander file too small");
         }
         item->callback(item, item->selectedSkylander.c_str(), item->slot);
         return true;

@@ -2,6 +2,7 @@
 
 #include <format>
 
+#include "utils/FSUtils.hpp"
 #include "utils/logger.h"
 
 #include "utils/aes.hpp"
@@ -595,7 +596,7 @@ void InfinityBase::GetPresentFigures(uint8_t sequence,
     int x = 3;
     for (uint8_t i = 0; i < m_figures.size(); i++) {
         uint8_t slot = (i < 3) ? 0x10 : (i < 6) ? 0x20
-                                               : 0x30;
+                                                : 0x30;
         if (m_figures[i].present) {
             replyBuf[x]     = slot + m_figures[i].orderAdded;
             replyBuf[x + 1] = 0x09;
@@ -674,8 +675,8 @@ bool InfinityBase::RemoveFigure(uint8_t position) {
     if (figure.present) {
         figure.figNum = 0;
         figure.Save();
-        fclose(figure.infFile);
-        figure.present = false;
+        figure.filePath = "";
+        figure.present  = false;
 
         position = DeriveFigurePosition(position);
         if (position == 0) {
@@ -694,7 +695,10 @@ bool InfinityBase::RemoveFigure(uint8_t position) {
 
 uint32_t
 InfinityBase::LoadFigure(const std::array<uint8_t, INF_FIGURE_SIZE> &buf,
-                         FILE *inFile, uint8_t position) {
+                         std::string inFile, uint8_t position) {
+    if (position >= 9)
+        return 0;
+
     std::lock_guard lock(m_infinityMutex);
     uint8_t orderAdded;
 
@@ -727,8 +731,8 @@ InfinityBase::LoadFigure(const std::array<uint8_t, INF_FIGURE_SIZE> &buf,
 
         InfinityFigure &figure = m_figures[position];
 
-        figure.infFile = std::move(inFile);
-        figure.figNum  = number;
+        figure.filePath = inFile;
+        figure.figNum   = number;
         memcpy(figure.data.data(), buf.data(), figure.data.size());
         figure.present = true;
         if (figure.orderAdded == 255) {
@@ -739,7 +743,7 @@ InfinityBase::LoadFigure(const std::array<uint8_t, INF_FIGURE_SIZE> &buf,
 
         position = DeriveFigurePosition(position);
         if (position == 0) {
-            fclose(inFile);
+            figure.filePath = "";
             return 0;
         }
 
@@ -749,7 +753,6 @@ InfinityBase::LoadFigure(const std::array<uint8_t, INF_FIGURE_SIZE> &buf,
 
         return number;
     }
-    fclose(inFile);
     return 0;
 }
 
@@ -902,9 +905,11 @@ std::array<uint8_t, 16> InfinityBase::GenerateInfinityFigureKey(const std::vecto
 
 
 void InfinityBase::InfinityFigure::Save() {
-    if (!infFile)
+    if (filePath.empty()) {
+        DEBUG_FUNCTION_LINE("No Infinity file present to save");
         return;
+    }
 
-    fseeko(infFile, 0, SEEK_SET);
-    fwrite(data.data(), sizeof(data[0]), data.size(), infFile);
+    int result = FSUtils::WriteToFile(filePath.c_str(), data.data(), data.size());
+    DEBUG_FUNCTION_LINE("WriteToFile returned %d", result);
 }

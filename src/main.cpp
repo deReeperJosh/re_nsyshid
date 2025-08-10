@@ -1,4 +1,5 @@
 #include "utils/logger.h"
+#include "utils/FSUtils.hpp"
 #include <coreinit/filesystem.h>
 #include <wups.h>
 #include <wups/button_combo/api.h>
@@ -201,6 +202,8 @@ INITIALIZE_PLUGIN() {
         DEBUG_FUNCTION_LINE_ERR("Failed to init config api");
     }
 
+    FSUtils::Initialize();
+
     deinitLogging();
 }
 
@@ -210,6 +213,7 @@ INITIALIZE_PLUGIN() {
 DEINITIALIZE_PLUGIN() {
     // Remove all button combos from this plugin.
     DEBUG_FUNCTION_LINE("DEINITIALIZE_PLUGIN of re_nsyshid!");
+    FSUtils::Finalize();
 }
 
 /**

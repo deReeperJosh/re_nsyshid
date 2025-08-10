@@ -8,6 +8,7 @@
 #include <random>
 #include <span>
 
+#include "utils/FSUtils.hpp"
 #include "utils/logger.h"
 
 #include "utils/aes.hpp"
@@ -521,14 +522,14 @@ std::array<uint8_t, 32> DimensionsToypad::GetStatus() {
             m_queries.pop();
             responded           = true;
             m_wasLastRespFigure = false;
-            m_noResponseCount = 0;
+            m_noResponseCount   = 0;
         } else if (!m_figureAddedRemovedResponses.empty() && m_isAwake && (!m_wasLastRespFigure || m_noResponseCount >= 10)) {
             std::lock_guard lock(m_dimensionsMutex);
             response = m_figureAddedRemovedResponses.front();
             m_figureAddedRemovedResponses.pop();
             responded           = true;
             m_wasLastRespFigure = true;
-            m_noResponseCount = 0;
+            m_noResponseCount   = 0;
         } else {
             m_noResponseCount++;
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -1045,7 +1046,7 @@ bool DimensionsToypad::RemoveFigure(uint8_t pad, uint8_t index, bool fullRemove)
         figureChangeResponse[13]                     = GenerateChecksum(figureChangeResponse, 13);
         m_figureAddedRemovedResponses.push(figureChangeResponse);
         figure.Save();
-        fclose(figure.dimFile);
+        figure.filePath = "";
     }
 
     figure.index = 255;
@@ -1091,13 +1092,13 @@ bool DimensionsToypad::CancelRemove(uint8_t index) {
     return true;
 }
 
-uint32_t DimensionsToypad::LoadFigure(const std::array<uint8_t, 0x2D * 0x04> &buf, FILE *file, uint8_t pad, uint8_t index) {
+uint32_t DimensionsToypad::LoadFigure(const std::array<uint8_t, 0x2D * 0x04> &buf, std::string file, uint8_t pad, uint8_t index) {
     std::lock_guard lock(m_dimensionsMutex);
 
     const uint32_t id = GetFigureId(buf);
 
     DimensionsMini &figure = GetFigureByIndex(index);
-    figure.dimFile         = std::move(file);
+    figure.filePath        = file;
     figure.id              = id;
     figure.pad             = pad;
     figure.index           = index + 1;
@@ -1124,11 +1125,11 @@ bool DimensionsToypad::MoveFigure(uint8_t pad, uint8_t index, uint8_t oldPad, ui
 
     DimensionsMini &figure                          = GetFigureByIndex(oldIndex);
     const std::array<uint8_t, DIM_FIGURE_SIZE> data = figure.data;
-    FILE *inFile                                    = std::move(figure.dimFile);
+    std::string inFile                              = figure.filePath;
 
     RemoveFigure(oldPad, oldIndex, false);
 
-    LoadFigure(data, std::move(inFile), pad, index);
+    LoadFigure(data, inFile, pad, index);
 
     return true;
 }
@@ -1333,11 +1334,13 @@ uint8_t DimensionsToypad::GenerateChecksum(const std::array<uint8_t, 32> &data,
 }
 
 void DimensionsToypad::DimensionsMini::Save() {
-    if (!dimFile)
+    if (filePath.empty()) {
+        DEBUG_FUNCTION_LINE("No Dimensions file present to save");
         return;
+    }
 
-    fseeko(dimFile, 0, SEEK_SET);
-    fwrite(data.data(), sizeof(data[0]), data.size(), dimFile);
+    int result = FSUtils::WriteToFile(filePath.c_str(), data.data(), data.size());
+    DEBUG_FUNCTION_LINE("WriteToFile returned %d", result);
 }
 
 std::map<const uint32_t, const char *> DimensionsToypad::GetListMinifigs() {
