@@ -1,4 +1,5 @@
 #include "Skylander.h"
+#include "utils/FSUtils.hpp"
 #include "utils/logger.h"
 
 #include <algorithm>
@@ -1000,6 +1001,7 @@ void SkylanderPortal::QueryBlock(uint8_t skyNum, uint8_t block, uint8_t *replyBu
 
 void SkylanderPortal::WriteBlock(uint8_t skyNum, uint8_t block,
                                  const uint8_t *toWriteBuf, uint8_t *replyBuf) {
+    DEBUG_FUNCTION_LINE("Writing to block %d of Skylander %d", block, skyNum);
     std::lock_guard lock(m_skyMutex);
 
     auto &skylander = m_skylanders[skyNum];
@@ -1008,23 +1010,25 @@ void SkylanderPortal::WriteBlock(uint8_t skyNum, uint8_t block,
     replyBuf[2] = block;
 
     if (skylander.status & 1) {
+        DEBUG_FUNCTION_LINE("Writing Block: %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X", toWriteBuf[0], toWriteBuf[1], toWriteBuf[2], toWriteBuf[3], toWriteBuf[4], toWriteBuf[5], toWriteBuf[6], toWriteBuf[7], toWriteBuf[8], toWriteBuf[9], toWriteBuf[10], toWriteBuf[11], toWriteBuf[12], toWriteBuf[13], toWriteBuf[14], toWriteBuf[15]);
         replyBuf[1] = (0x10 | skyNum);
         memcpy(skylander.data.data() + (block * SKY_BLOCK_SIZE), toWriteBuf, SKY_BLOCK_SIZE);
+        DEBUG_FUNCTION_LINE("Skylander After Block: %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X", skylander.data[block * SKY_BLOCK_SIZE], skylander.data[(block * SKY_BLOCK_SIZE) + 1], skylander.data[(block * SKY_BLOCK_SIZE) + 2], skylander.data[(block * SKY_BLOCK_SIZE) + 3], skylander.data[(block * SKY_BLOCK_SIZE) + 4], skylander.data[(block * SKY_BLOCK_SIZE) + 5], skylander.data[(block * SKY_BLOCK_SIZE) + 6], skylander.data[(block * SKY_BLOCK_SIZE) + 7], skylander.data[(block * SKY_BLOCK_SIZE) + 8], skylander.data[(block * SKY_BLOCK_SIZE) + 9], skylander.data[(block * SKY_BLOCK_SIZE) + 10], skylander.data[(block * SKY_BLOCK_SIZE) + 11], skylander.data[(block * SKY_BLOCK_SIZE) + 12], skylander.data[(block * SKY_BLOCK_SIZE) + 13], skylander.data[(block * SKY_BLOCK_SIZE) + 14], skylander.data[(block * SKY_BLOCK_SIZE) + 15]);
         skylander.Save();
     } else {
         replyBuf[1] = skyNum;
     }
 }
 
-bool SkylanderPortal::LoadSkylander(uint8_t *buf, FILE *file, uint8_t uiSlot) {
+bool SkylanderPortal::LoadSkylander(uint8_t *buf, std::string file, uint8_t uiSlot) {
     if (m_skylanderUIPositions[uiSlot]) {
         RemoveSkylander(uiSlot);
     }
-    m_skylanderUIPositions[uiSlot] = LoadSkylander(buf, std::move(file));
+    m_skylanderUIPositions[uiSlot] = LoadSkylander(buf, file);
     return true;
 }
 
-uint8_t SkylanderPortal::LoadSkylander(uint8_t *buf, FILE *file) {
+uint8_t SkylanderPortal::LoadSkylander(uint8_t *buf, std::string file) {
     std::lock_guard lock(m_skyMutex);
 
     uint32_t skySerial = 0;
@@ -1050,8 +1054,8 @@ uint8_t SkylanderPortal::LoadSkylander(uint8_t *buf, FILE *file) {
     if (foundSlot != 0xFF) {
         auto &skylander = m_skylanders[foundSlot];
         memcpy(skylander.data.data(), buf, skylander.data.size());
-        skylander.skyFile = std::move(file);
-        skylander.status  = Skylander::ADDED;
+        skylander.filePath = file;
+        skylander.status   = Skylander::ADDED;
         skylander.queuedStatus.push(Skylander::ADDED);
         skylander.queuedStatus.push(Skylander::READY);
         skylander.lastId = skySerial;
@@ -1072,7 +1076,8 @@ bool SkylanderPortal::RemoveSkylander(uint8_t skyNum) {
         thesky.queuedStatus.push(Skylander::REMOVING);
         thesky.queuedStatus.push(Skylander::REMOVED);
         thesky.Save();
-        fclose(thesky.skyFile);
+        //fclose(thesky.skyFile);
+        thesky.filePath                = "";
         m_skylanderUIPositions[skyNum] = std::nullopt;
         return true;
     }
@@ -1178,9 +1183,11 @@ std::string SkylanderPortal::GetSkylanderFromUISlot(uint8_t uiSlot) {
 }
 
 void SkylanderPortal::Skylander::Save() {
-    if (!skyFile)
+    if (filePath.empty()) {
+        DEBUG_FUNCTION_LINE("No Skylander file present to save");
         return;
+    }
 
-    fseeko(skyFile, 0, SEEK_SET);
-    fwrite(data.data(), sizeof(data[0]), data.size(), skyFile);
+    int result = FSUtils::WriteToFile(filePath.c_str(), data.data(), data.size());
+    DEBUG_FUNCTION_LINE("WriteToFile returned %d", result);
 }

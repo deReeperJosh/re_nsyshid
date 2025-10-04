@@ -4,6 +4,7 @@
 
 #include "ConfigItemDimensionsPad.hpp"
 #include "utils/DrawUtils.hpp"
+#include "utils/FSUtils.hpp"
 #include "utils/input.h"
 #include "utils/logger.h"
 
@@ -967,21 +968,15 @@ static bool ConfigItemDimensionsPad_callCallback(void *context, uint8_t index) {
     saveFavorites(item);
 
     if (item->callback && item->figureFiles[index]) {
-        FILE *dimensionsFile = fopen(item->figureFiles[index].value().c_str(), "r+b");
-        if (!dimensionsFile) {
-            DEBUG_FUNCTION_LINE_ERR("Failed to open Dimensions file");
-        } else {
-            std::array<uint8_t, 0x2D * 0x04> fileData;
-            const size_t ret_code = fread(fileData.data(), sizeof(fileData[0]), fileData.size(), dimensionsFile);
-            if (ret_code == fileData.size()) {
-                uint8_t pad = derivePadFromIndex(index);
-                if (pad > 0) {
-                    item->figureNumbers[index] = g_dimensionstoypad.LoadFigure(fileData, std::move(dimensionsFile), pad, index);
-                }
-            } else {
-                DEBUG_FUNCTION_LINE_ERR("Dimensions file too small");
-                fclose(dimensionsFile);
+        std::array<uint8_t, 0x2D * 0x04> fileData;
+        int ret_code = FSUtils::ReadFromFile(item->figureFiles[index].value().c_str(), fileData.data(), fileData.size());
+        if (ret_code == fileData.size()) {
+            uint8_t pad = derivePadFromIndex(index);
+            if (pad > 0) {
+                item->figureNumbers[index] = g_dimensionstoypad.LoadFigure(fileData, item->figureFiles[index].value(), pad, index);
             }
+        } else {
+            DEBUG_FUNCTION_LINE_ERR("Dimensions file too small");
         }
         item->callback(item, item->figureFiles[index].value().c_str(), index);
         return true;
