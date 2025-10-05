@@ -20,6 +20,7 @@
 
 #include "http.hpp"
 
+#include "endpoints/dimensionsendpoints.h"
 #include "endpoints/files.h"
 #include "endpoints/infinityendpoints.h"
 #include "endpoints/skylanderendpoints.h"
@@ -42,20 +43,7 @@ WUPS_PLUGIN_VERSION(VERSION_STRING(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH))
 WUPS_PLUGIN_AUTHOR("deReeperJosh");
 WUPS_PLUGIN_LICENSE("GPLv2");
 
-#define LOG_FS_OPEN_CONFIG_ID             "logFSOpen"
-#define BUTTON_COMBO_PRESS_DOWN_CONFIG_ID "pressDownItem"
-#define BUTTON_COMBO_HOLD_CONFIG_ID       "holdItem"
-#define OTHER_EXAMPLE_BOOL_CONFIG_ID      "otherBoolItem"
-#define OTHER_EXAMPLE2_BOOL_CONFIG_ID     "other2BoolItem"
-#define INTEGER_RANGE_EXAMPLE_CONFIG_ID   "intRangeExample"
-
-#define TAG_EMULATION_PATH                std::string("/vol/external01/wiiu/re_nsyshid/")
-
-/**
-    All of this defines can be used in ANY file.
-    It's possible to split it up into multiple files.
-
-**/
+#define TAG_EMULATION_PATH std::string("/vol/external01/wiiu/re_nsyshid/")
 
 WUPS_USE_WUT_DEVOPTAB();        // Use the wut devoptabs
 WUPS_USE_STORAGE("re_nsyshid"); // Unique id for the storage api
@@ -127,6 +115,7 @@ void make_server() {
         registerStatusEndpoints(server);
         registerSkylanderEndpoints(server);
         registerInfinityEndpoints(server);
+        registerDimensionsEndpoints(server);
         registerFileEndpoints(server);
 
         // TODO: Make the port configurable
