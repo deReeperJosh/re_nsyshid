@@ -17,8 +17,8 @@ WUT_ROOT := $(DEVKITPRO)/wut
 # Version used for the module and plugin
 #-------------------------------------------------------------------------------
 export VERSION_MAJOR	:=	0
-export VERSION_MINOR	:=	4
-export VERSION_PATCH	:=	3
+export VERSION_MINOR	:=	5
+export VERSION_PATCH	:=	0
 
 #-------------------------------------------------------------------------------
 # TARGET is the name of the output
