@@ -1182,6 +1182,16 @@ std::string SkylanderPortal::GetSkylanderFromUISlot(uint8_t uiSlot) {
     return "None";
 }
 
+const std::pair<const uint16_t, const uint16_t> SkylanderPortal::GetSkylanderIdFromUISlot(uint8_t uiSlot) {
+    if (m_skylanderUIPositions[uiSlot]) {
+        auto &thesky    = m_skylanders[m_skylanderUIPositions[uiSlot].value()];
+        uint16_t skyId  = uint16_t(thesky.data[0x11]) << 8 | uint16_t(thesky.data[0x10]);
+        uint16_t skyVar = uint16_t(thesky.data[0x1D]) << 8 | uint16_t(thesky.data[0x1C]);
+        return {skyId, skyVar};
+    }
+    return {0, 0};
+}
+
 void SkylanderPortal::Skylander::Save() {
     if (filePath.empty()) {
         DEBUG_FUNCTION_LINE("No Skylander file present to save");

@@ -20,6 +20,10 @@
 
 #include "http.hpp"
 
+#include "endpoints/files.h"
+#include "endpoints/skylanderendpoints.h"
+#include "endpoints/status.h"
+
 #include <forward_list>
 
 #include <malloc.h>
@@ -119,6 +123,10 @@ void make_server() {
             return HttpResponse{200, "text/plain", "re_nsyshid"};
         });
 
+        registerStatusEndpoints(server);
+        registerSkylanderEndpoints(server);
+        registerFileEndpoints(server);
+
         // TODO: Make the port configurable
         server.startListening(8572);
     } catch (std::exception &e) {
@@ -179,12 +187,14 @@ WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle ro
             DEBUG_FUNCTION_LINE_ERR("GetOrStoreDefault failed: %s (%d)",
                                     WUPSStorageAPI_GetStatusStr(storageRes), storageRes);
         }
+        if ((storageRes = WUPSStorageAPI::GetOrStoreDefault(ENABLE_SERVER_CONFIG_ID, enableServer,
+                                                            ENABLE_SERVER_DEFAULT_VALUE)) != WUPS_STORAGE_ERROR_SUCCESS) {
+            DEBUG_FUNCTION_LINE_ERR("GetOrStoreDefault failed: %s (%d)",
+                                    WUPSStorageAPI_GetStatusStr(storageRes), storageRes);
+        }
         if ((storageRes = WUPSStorageAPI::SaveStorage()) != WUPS_STORAGE_ERROR_SUCCESS) {
             DEBUG_FUNCTION_LINE_ERR("SaveStorage failed: %s (%d)",
                                     WUPSStorageAPI_GetStatusStr(storageRes), storageRes);
-        }
-        if ((storageRes = WUPSStorageAPI::GetOrStoreDefault(ENABLE_SERVER_CONFIG_ID, enableServer, ENABLE_SERVER_DEFAULT_VALUE)) != WUPS_STORAGE_ERROR_SUCCESS) {
-            DEBUG_FUNCTION_LINE_ERR("GetOrStoreDefault failed: %s (%d)", WUPSStorageAPI_GetStatusStr(storageRes), storageRes);
         }
 
 

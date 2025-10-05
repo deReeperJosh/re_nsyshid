@@ -198,6 +198,7 @@ public:
     std::string FindSkylander(uint16_t skyId, uint16_t skyVar);
 
     std::string GetSkylanderFromUISlot(uint8_t uiSlot);
+    const std::pair<const uint16_t, const uint16_t> GetSkylanderIdFromUISlot(uint8_t uiSlot);
 
 protected:
     std::mutex m_skyMutex;

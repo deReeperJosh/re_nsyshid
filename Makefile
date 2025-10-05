@@ -29,7 +29,7 @@ export VERSION_PATCH	:=	3
 #-------------------------------------------------------------------------------
 TARGET		:=	re_nsyshid
 BUILD		:=	build
-SOURCES		:=	src src/utils src/devices src/config src/http src/MiniJson/Source/src
+SOURCES		:=	src src/utils src/devices src/config src/http src/MiniJson/Source/src src/endpoints
 DATA		:=	data
 INCLUDES	:=	src src/include src/http src/MiniJson/Source/include
 
