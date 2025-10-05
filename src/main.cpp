@@ -21,6 +21,7 @@
 #include "http.hpp"
 
 #include "endpoints/files.h"
+#include "endpoints/infinityendpoints.h"
 #include "endpoints/skylanderendpoints.h"
 #include "endpoints/status.h"
 
@@ -125,10 +126,11 @@ void make_server() {
 
         registerStatusEndpoints(server);
         registerSkylanderEndpoints(server);
+        registerInfinityEndpoints(server);
         registerFileEndpoints(server);
 
         // TODO: Make the port configurable
-        server.startListening(8572);
+        server.startListening(8853);
     } catch (std::exception &e) {
         // FIXME: write good strings that can easily be translated
         NotificationModule_AddErrorNotification("re_nsyshid threw an exception. If the problem persists, check system logs.");
