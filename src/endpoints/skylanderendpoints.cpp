@@ -79,4 +79,31 @@ void registerSkylanderEndpoints(HttpServer &server) {
             return HttpResponse{400, res};
         }
     });
+
+    server.when("/device/skylander/create")->posted([](const HttpRequest &req) {
+        miniJson::Json::_object res;
+        auto body = req.json();
+
+        if (!body.isObject()) {
+            res["error"] = "INVALID_BODY";
+            return HttpResponse{200, res};
+        }
+        auto createRequest = body.toObject();
+        const auto skyId   = createRequest["id"];
+        const auto skyVar  = createRequest["var"];
+        if (!skyId.isNumber() || !skyVar.isNumber()) {
+            res["error"] = "INVALID_ID_OR_VAR_PARAM";
+            return HttpResponse{400, res};
+        }
+        uint16_t id  = uint16_t(skyId.toDouble());
+        uint16_t var = uint16_t(skyVar.toDouble());
+        std::string name = g_skyportal.FindSkylander(id, var);
+        if (g_skyportal.CreateSkylander("/vol/external01/wiiu/re_nsyshid/" + name + ".sky", id, var)) {
+            res["message"] = "Skylander created";
+            return HttpResponse{200, res};
+        } else {
+            res["error"] = "FAILED_TO_CREATE_SKYLANDER";
+            return HttpResponse{400, res};
+        }
+    });
 }
