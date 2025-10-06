@@ -1,0 +1,662 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Emulation Device Server API",
+    "description": "REST API for controlling an emulation device and managing per-slot files.\nStatus values: 0 = disabled, 1 = enabled.\nDevice values: 0 = none, 1 = skylander, 2 = infinity, 3 = dimensions.\n",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://{ip}:8853",
+      "variables": {
+        "ip": {
+          "description": "Server IP or hostname",
+          "default": "127.0.0.1"
+        }
+      }
+    }
+  ],
+  "tags": [
+    {
+      "name": "Status",
+      "description": "Emulation status and active device"
+    },
+    {
+      "name": "Devices",
+      "description": "Per-device data and slot actions"
+    },
+    {
+      "name": "Files",
+      "description": "File browsing for loadable content"
+    }
+  ],
+  "paths": {
+    "/status": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Get emulation status and active device",
+        "operationId": "getStatus",
+        "responses": {
+          "200": {
+            "description": "Current status and device",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                },
+                "examples": {
+                  "enabledSkylander": {
+                    "value": {
+                      "status": 1,
+                      "device": 1
+                    }
+                  },
+                  "disabledNone": {
+                    "value": {
+                      "status": 0,
+                      "device": 0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status/enable": {
+      "post": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Enable emulation",
+        "operationId": "enableStatus",
+        "responses": {
+          "200": {
+            "description": "Emulation enabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                },
+                "examples": {
+                  "ok": {
+                    "value": {
+                      "status": 1,
+                      "device": 2
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status/disable": {
+      "post": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Disable emulation",
+        "operationId": "disableStatus",
+        "responses": {
+          "200": {
+            "description": "Emulation disabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                },
+                "examples": {
+                  "ok": {
+                    "value": {
+                      "status": 0,
+                      "device": 2
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status/device": {
+      "post": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Set active emulated device",
+        "operationId": "setDevice",
+        "requestBody": {
+          "content": {
+            "text/plain": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceKey"
+              },
+              "examples": {
+                "none": {
+                  "value": "none"
+                },
+                "skylander": {
+                  "value": "skylander"
+                },
+                "infinity": {
+                  "value": "infinity"
+                },
+                "dimensions": {
+                  "value": "dimensions"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Device changed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                },
+                "examples": {
+                  "nowSkylander": {
+                    "value": {
+                      "status": 1,
+                      "device": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/{device}": {
+      "get": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Get device data and slot information",
+        "operationId": "getDeviceData",
+        "parameters": [
+          {
+            "name": "device",
+            "in": "path",
+            "description": "Device key. Must be one of `none`, `skylander`, `infinity`, `dimensions`.\n",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DeviceKey"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device data including slots",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceSlotsResponse"
+                },
+                "examples": {
+                  "sample": {
+                    "value": {
+                      "device": "skylander",
+                      "slots": [
+                        {
+                          "slot": 0,
+                          "name": "Spyro",
+                          "filepath": "Skylanders/Spyro.bin"
+                        },
+                        {
+                          "slot": 1
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/{device}/create": {
+      "post": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Create a new emulated file for the device",
+        "description": "- **skylander**: body must include `id` (0..65535) and `var` (0..65535)\n- **infinity** and **dimensions**: body must include `id` (0..4294967295)\n",
+        "operationId": "createDeviceFile",
+        "parameters": [
+          {
+            "name": "device",
+            "in": "path",
+            "description": "Device key. Must be one of `none`, `skylander`, `infinity`, `dimensions`.\n",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DeviceKey"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/device_create_body"
+              },
+              "examples": {
+                "skylander": {
+                  "value": {
+                    "id": 42,
+                    "var": 7
+                  }
+                },
+                "infinity": {
+                  "value": {
+                    "id": 123456
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "File created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateResponse"
+                },
+                "examples": {
+                  "ok": {
+                    "value": {
+                      "file": "Skylanders/Spyro.bin"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/device/{device}/load": {
+      "post": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Load an existing file into a slot",
+        "operationId": "loadDeviceFile",
+        "parameters": [
+          {
+            "name": "device",
+            "in": "path",
+            "description": "Device key. Must be one of `none`, `skylander`, `infinity`, `dimensions`.\n",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DeviceKey"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoadRequest"
+              },
+              "examples": {
+                "ex": {
+                  "value": {
+                    "slot": 0,
+                    "file": "Skylanders/Spyro.bin"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Loaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResponse"
+                },
+                "examples": {
+                  "ok": {
+                    "value": {
+                      "message": "loaded"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/device/{device}/remove": {
+      "post": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Remove the file from a slot",
+        "operationId": "removeDeviceFile",
+        "parameters": [
+          {
+            "name": "device",
+            "in": "path",
+            "description": "Device key. Must be one of `none`, `skylander`, `infinity`, `dimensions`.\n",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DeviceKey"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveRequest"
+              },
+              "examples": {
+                "ex": {
+                  "value": {
+                    "slot": 1
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Removed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResponse"
+                },
+                "examples": {
+                  "ok": {
+                    "value": {
+                      "message": "removed"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/files": {
+      "get": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "List files/directories for browsing",
+        "operationId": "listFiles",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "query",
+            "description": "Optional relative path to list. Empty = root.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File listing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilesList"
+                },
+                "examples": {
+                  "root": {
+                    "value": {
+                      "files": [
+                        "Skylanders/",
+                        "Infinity/",
+                        "Dimensions/",
+                        "README.TXT"
+                      ]
+                    }
+                  },
+                  "subdir": {
+                    "value": {
+                      "files": [
+                        "Spyro.bin",
+                        "Gill Grunt.bin",
+                        "More/"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "StatusResponse": {
+        "required": [
+          "device",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "description": "0=disabled, 1=enabled",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "device": {
+            "type": "integer",
+            "description": "0=none, 1=skylander, 2=infinity, 3=dimensions",
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ]
+          }
+        }
+      },
+      "DeviceKey": {
+        "type": "string",
+        "enum": [
+          "none",
+          "skylander",
+          "infinity",
+          "dimensions"
+        ]
+      },
+      "DeviceSlotsResponse": {
+        "required": [
+          "device",
+          "slots"
+        ],
+        "type": "object",
+        "properties": {
+          "device": {
+            "$ref": "#/components/schemas/DeviceKey"
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Slot"
+            }
+          }
+        }
+      },
+      "Slot": {
+        "type": "object",
+        "properties": {
+          "slot": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "filepath": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "CreateSkylanderRequest": {
+        "required": [
+          "id",
+          "var"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "var": {
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
+          }
+        }
+      },
+      "CreateGenericRequest": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "maximum": 4294967295,
+            "minimum": 0,
+            "type": "integer"
+          }
+        }
+      },
+      "CreateResponse": {
+        "required": [
+          "file"
+        ],
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Path to the created file"
+          }
+        }
+      },
+      "LoadRequest": {
+        "required": [
+          "file",
+          "slot"
+        ],
+        "type": "object",
+        "properties": {
+          "slot": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "file": {
+            "type": "string"
+          }
+        }
+      },
+      "RemoveRequest": {
+        "required": [
+          "slot"
+        ],
+        "type": "object",
+        "properties": {
+          "slot": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        }
+      },
+      "ActionResponse": {
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "FilesList": {
+        "required": [
+          "files"
+        ],
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "device_create_body": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/CreateSkylanderRequest"
+          },
+          {
+            "$ref": "#/components/schemas/CreateGenericRequest"
+          }
+        ]
+      }
+    },
+    "parameters": {
+      "DevicePathParam": {
+        "name": "device",
+        "in": "path",
+        "description": "Device key. Must be one of `none`, `skylander`, `infinity`, `dimensions`.\n",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/DeviceKey"
+        }
+      }
+    }
+  }
+}
