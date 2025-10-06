@@ -118,8 +118,15 @@ void registerInfinityEndpoints(HttpServer &server) {
                     res["error"] = "INVALID_ID_PARAM";
                     return HttpResponse{400, res};
                 }
-                uint16_t id                            = uint16_t(figureId.toDouble());
+                uint32_t id                            = uint32_t(figureId.toDouble());
                 std::pair<uint8_t, std::string> figure = g_infinitybase.FindFigure(id);
-                return HttpResponse{404, res};
+                if (g_infinitybase.CreateFigure("/vol/external01/wiiu/re_nsyshid/Infinity/" + figure.second + ".bin", id, figure.first)) {
+                    res["message"] = "Figure created";
+                    res["file"]    = "/Infinity/" + figure.second + ".bin";
+                    return HttpResponse{200, res};
+                } else {
+                    res["error"] = "FAILED_TO_CREATE_FIGURE";
+                    return HttpResponse{400, res};
+                }
             });
 }

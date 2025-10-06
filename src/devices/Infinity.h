@@ -86,6 +86,7 @@ public:
     bool RemoveFigure(uint8_t position);
     uint32_t LoadFigure(const std::array<uint8_t, INF_FIGURE_SIZE> &buf,
                         std::string file, uint8_t position);
+    bool CreateFigure(std::string pathName, uint32_t figureNum, uint8_t series);
     static std::map<const uint32_t, const std::pair<const uint8_t, const char *>> GetFigureList();
     std::pair<uint8_t, std::string> FindFigure(uint32_t figNum);
     uint32_t FindFigureFromSlot(uint8_t slot);
@@ -104,7 +105,7 @@ private:
     InfinityFigure &GetFigureByOrder(uint8_t orderAdded);
     uint8_t DeriveFigurePosition(uint8_t position);
     std::array<uint8_t, 16> GenerateInfinityFigureKey(const std::vector<uint8_t> &sha1Data);
-    //std::array<uint8_t, 16> GenerateBlankFigureData(uint32_t figureNum, uint8_t series);
+    std::array<uint8_t, 16> GenerateBlankFigureData(uint32_t figureNum, uint8_t series);
 
     uint32_t m_randomA;
     uint32_t m_randomB;

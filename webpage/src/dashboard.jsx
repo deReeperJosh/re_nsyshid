@@ -14,6 +14,7 @@ export default function Dashboard() {
     const [currentPath, setCurrentPath] = useState("");
     const [activeSlot, setActiveSlot] = useState(null);
     const [loadingFiles, setLoadingFiles] = useState(false);
+    const [creatingFile, setCreatingFile] = useState(false);
     const [createModalVisible, setCreateModalVisible] = useState(false);
     const [createId, setCreateId] = useState("");
     const [createVar, setCreateVar] = useState("");
@@ -32,6 +33,13 @@ export default function Dashboard() {
         skylander: "Skylander Portal",
         infinity: "Infinity Base",
         dimensions: "Dimensions Toypad",
+    };
+
+    const createDisplayNames = {
+        none: "None",
+        skylander: "Skylander",
+        infinity: "Infinity Figure",
+        dimensions: "Dimensions Figure",
     };
 
     // Fetch status from server
@@ -191,7 +199,7 @@ export default function Dashboard() {
                 return;
             }
         }
-
+        setCreatingFile(true);
         try {
             const payload =
                 selectedDevice === "skylander"
@@ -217,6 +225,8 @@ export default function Dashboard() {
             setCreateModalVisible(false);
         } catch {
             setMessage("⚠️ Failed to create file");
+        } finally {
+            setCreatingFile(false);
         }
     };
 
@@ -277,8 +287,8 @@ export default function Dashboard() {
                                     onClick={() => toggleEmulation(true)}
                                     disabled={status === 1}
                                     className={`w-full px-4 py-2 rounded-xl text-white font-medium transition ${status === 1
-                                            ? "bg-gray-400 cursor-not-allowed"
-                                            : "bg-green-600 hover:bg-green-700"
+                                        ? "bg-gray-400 cursor-not-allowed"
+                                        : "bg-green-600 hover:bg-green-700"
                                         }`}
                                 >
                                     Enable Emulation
@@ -287,8 +297,8 @@ export default function Dashboard() {
                                     onClick={() => toggleEmulation(false)}
                                     disabled={status === 0}
                                     className={`w-full px-4 py-2 rounded-xl text-white font-medium transition ${status === 0
-                                            ? "bg-gray-400 cursor-not-allowed"
-                                            : "bg-red-600 hover:bg-red-700"
+                                        ? "bg-gray-400 cursor-not-allowed"
+                                        : "bg-red-600 hover:bg-red-700"
                                         }`}
                                 >
                                     Disable Emulation
@@ -378,55 +388,64 @@ export default function Dashboard() {
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl p-6 shadow-2xl w-96">
                         <h3 className="text-lg font-bold mb-4 text-center">
-                            Create New {deviceDisplayNames[selectedDevice]}
+                            Create New {createDisplayNames[selectedDevice]}
                         </h3>
 
                         <p className="text-sm text-center mb-4">
                             Creating for slot <strong>{activeSlot}</strong>
                         </p>
 
-                        <div className="space-y-3">
-                            <div>
-                                <label className="block text-sm font-medium mb-1">ID</label>
-                                <input
-                                    type="number"
-                                    value={createId}
-                                    onChange={(e) => setCreateId(e.target.value)}
-                                    className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Enter ID"
-                                />
+                        {creatingFile ? (
+                            <div className="flex justify-center items-center h-48">
+                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
                             </div>
+                        ) : (
+                            <>
 
-                            {selectedDevice === "skylander" && (
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">
-                                        Variant
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={createVar}
-                                        onChange={(e) => setCreateVar(e.target.value)}
-                                        className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
-                                        placeholder="Enter Variant"
-                                    />
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">ID</label>
+                                        <input
+                                            type="number"
+                                            value={createId}
+                                            onChange={(e) => setCreateId(e.target.value)}
+                                            className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+                                            placeholder="Enter ID"
+                                        />
+                                    </div>
+
+                                    {selectedDevice === "skylander" && (
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1">
+                                                Variant
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={createVar}
+                                                onChange={(e) => setCreateVar(e.target.value)}
+                                                className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+                                                placeholder="Enter Variant"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
 
-                        <div className="flex justify-between mt-6">
-                            <button
-                                onClick={() => setCreateModalVisible(false)}
-                                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleCreate}
-                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-                            >
-                                Create
-                            </button>
-                        </div>
+                                <div className="flex justify-between mt-6">
+                                    <button
+                                        onClick={() => setCreateModalVisible(false)}
+                                        className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleCreate}
+                                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                                    >
+                                        Create
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
