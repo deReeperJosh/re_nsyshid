@@ -75,6 +75,7 @@
 
 // use custom endian.h for wii u
 #include "../utils/endian.h"
+#include "utils/logger.h"
 
 enum class HttpRequestMethod { GET,
                                POST,
@@ -295,6 +296,7 @@ class HttpResponse : public HttpMessageCommon {
 public:
     HttpResponse(const unsigned statusCode) : mStatusCode{statusCode} {
         (*this)["Server"] = "tinyHTTP_1.1";
+        (*this)["Access-Control-Allow-Origin"] = "*";
 
         if (statusCode >= 200)
             (*this)["Content-Length"] = "0";
@@ -303,6 +305,7 @@ public:
     HttpResponse(const unsigned statusCode, std::string contentType, std::string content)
         : HttpResponse{statusCode} {
         (*this)["Content-Type"] = contentType;
+        (*this)["Access-Control-Allow-Origin"] = "*";
         setContent(content);
     }
 
