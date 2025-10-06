@@ -7,7 +7,6 @@
 #include <fstream>
 #include <iostream>
 #include <optional>
-#include <random>
 #include <span>
 
 #include "utils/FSUtils.hpp"
@@ -1354,18 +1353,14 @@ DimensionsToypad::GetFigureByIndex(uint8_t index) {
 }
 
 void DimensionsToypad::RandomUID(std::array<uint8_t, 0x2D * 0x04> &uid_buffer) {
+    srand(time(NULL));
     uid_buffer[0] = 0x04;
+    uid_buffer[1] = rand() % 256;
+    uid_buffer[2] = rand() % 256;
+    uid_buffer[4] = rand() % 256;
+    uid_buffer[5] = rand() % 256;
+    uid_buffer[6] = rand() % 256;
     uid_buffer[7] = 0x80;
-
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_int_distribution<int> dist(0, 255);
-
-    uid_buffer[1] = dist(mt);
-    uid_buffer[2] = dist(mt);
-    uid_buffer[4] = dist(mt);
-    uid_buffer[5] = dist(mt);
-    uid_buffer[6] = dist(mt);
 }
 
 uint8_t DimensionsToypad::GenerateChecksum(const std::array<uint8_t, 32> &data,

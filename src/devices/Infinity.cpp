@@ -3,7 +3,6 @@
 #include <format>
 #include <fstream>
 #include <iostream>
-#include <random>
 
 #include "utils/FSUtils.hpp"
 #include "utils/logger.h"
@@ -829,17 +828,15 @@ bool InfinityBase::CreateFigure(std::string pathName, uint32_t figureNum, uint8_
     std::vector<uint8_t> sha1Calc = {SHA1_CONSTANT.begin(), SHA1_CONSTANT.end() - 1};
 
     // Generate random UID, used for AES encrypt/decrypt
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_int_distribution<int> dist(0, 255);
     std::array<uint8_t, 16> uid_data = {0, 0, 0, 0, 0, 0, 0, 0x89, 0x44, 0x00, 0xC2};
-    uid_data[0]                      = dist(mt);
-    uid_data[1]                      = dist(mt);
-    uid_data[2]                      = dist(mt);
-    uid_data[3]                      = dist(mt);
-    uid_data[4]                      = dist(mt);
-    uid_data[5]                      = dist(mt);
-    uid_data[6]                      = dist(mt);
+    srand(time(NULL));
+    uid_data[0]                      = rand() % 256;
+    uid_data[1]                      = rand() % 256;
+    uid_data[2]                      = rand() % 256;
+    uid_data[3]                      = rand() % 256;
+    uid_data[4]                      = rand() % 256;
+    uid_data[5]                      = rand() % 256;
+    uid_data[6]                      = rand() % 256;
     for (int8_t i = 0; i < 7; i++) {
         sha1Calc.push_back(uid_data[i]);
     }
