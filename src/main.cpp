@@ -221,6 +221,7 @@ DEINITIALIZE_PLUGIN() {
 **/
 ON_APPLICATION_START() {
     initLogging();
+    FSUtils::Initialize();
 
     DEBUG_FUNCTION_LINE("ON_APPLICATION_START of re_nsyshid!");
 }
