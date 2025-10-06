@@ -1,13 +1,37 @@
 #include "files.h"
 
 #include <dirent.h>
+#include <sstream>
+#include <string>
+
+std::string urlDecode(const std::string &urlEncodedString) {
+    std::istringstream input(urlEncodedString);
+    std::ostringstream output;
+
+    char hex;
+    int value;
+
+    while (input >> std::noskipws >> hex) {
+        if (hex == '%') {
+            if (input >> std::hex >> value) {
+                output << static_cast<char>(value);
+            }
+        } else {
+            output << hex;
+        }
+    }
+
+    return output.str();
+}
 
 void registerFileEndpoints(HttpServer &server) {
     server.when("/files")->requested([](const HttpRequest &req) {
         std::string path = "/vol/external01/wiiu/re_nsyshid/"; // Base directory
         if (!req.getQuery().empty() && req.getQuery().length() > 1) {
-            path += req.getQuery().substr(1); // Append query to path for subdirectory
-            DEBUG_FUNCTION_LINE("Loading path %s", path.c_str());
+            if (req.getQuery().find("path=") == 1) {                             // Ensure query starts with 'path='
+                path += urlDecode(req.getQuery().substr(req.getQuery().find("path=") + 5)); // Append query to path for subdirectory
+                DEBUG_FUNCTION_LINE("Loading path %s", path.c_str());
+            }
         }
 
         miniJson::Json::_object ret;
