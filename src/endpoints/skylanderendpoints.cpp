@@ -122,8 +122,9 @@ void registerSkylanderEndpoints(HttpServer &server) {
                 uint16_t id      = uint16_t(skyId.toDouble());
                 uint16_t var     = uint16_t(skyVar.toDouble());
                 std::string name = g_skyportal.FindSkylander(id, var);
-                if (g_skyportal.CreateSkylander("/vol/external01/wiiu/re_nsyshid/" + name + ".sky", id, var)) {
+                if (g_skyportal.CreateSkylander("/vol/external01/wiiu/re_nsyshid/Skylanders/" + name + ".sky", id, var)) {
                     res["message"] = "Skylander created";
+                    res["file"]    = "/Skylanders/" + name + ".sky";
                     return HttpResponse{200, res};
                 } else {
                     res["error"] = "FAILED_TO_CREATE_SKYLANDER";

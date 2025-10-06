@@ -100,4 +100,26 @@ void registerInfinityEndpoints(HttpServer &server) {
                     return HttpResponse{400, res};
                 }
             });
+
+    server.when("/device/infinity/create")
+            ->options([](const HttpRequest &req) {
+                HttpResponse res(200);
+                res["Access-Control-Allow-Methods"] = "POST, OPTIONS";
+                res["Access-Control-Allow-Headers"] = "Content-Type";
+                res["Access-Control-Max-Age"]       = "86400";
+                return res;
+            })
+            ->posted([](const HttpRequest &req) {
+                miniJson::Json::_object res;
+                auto body           = req.json();
+                auto createRequest  = body.toObject();
+                const auto figureId = createRequest["id"];
+                if (!figureId.isNumber()) {
+                    res["error"] = "INVALID_ID_PARAM";
+                    return HttpResponse{400, res};
+                }
+                uint16_t id                            = uint16_t(figureId.toDouble());
+                std::pair<uint8_t, std::string> figure = g_infinitybase.FindFigure(id);
+                return HttpResponse{404, res};
+            });
 }
