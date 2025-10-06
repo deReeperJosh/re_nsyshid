@@ -22,66 +22,82 @@ void registerInfinityEndpoints(HttpServer &server) {
         return HttpResponse{200, ret};
     });
 
-    server.when("/device/infinity/remove")->posted([](const HttpRequest &req) {
-        miniJson::Json::_object res;
-        auto body = req.json();
+    server.when("/device/infinity/remove")
+            ->options([](const HttpRequest &req) {
+                HttpResponse res(200);
+                res["Access-Control-Allow-Methods"] = "POST, OPTIONS";
+                res["Access-Control-Allow-Headers"] = "Content-Type";
+                res["Access-Control-Max-Age"]       = "86400";
+                return res;
+            })
+            ->posted([](const HttpRequest &req) {
+                miniJson::Json::_object res;
+                auto body = req.json();
 
-        if (!body.isObject()) {
-            res["error"] = "INVALID_BODY";
-            return HttpResponse{200, res};
-        }
-        auto removeRequest    = body.toObject();
-        const auto baseSlot = removeRequest["slot"];
-        if (!baseSlot.isNumber()) {
-            res["error"] = "INVALID_SLOT_PARAM";
-            return HttpResponse{400, res};
-        }
-        uint8_t slot = uint8_t(baseSlot.toDouble());
-        if (slot >= MAX_FIGURES || slot < 0) {
-            res["error"] = "INVALID_SLOT";
-            return HttpResponse{400, res};
-        }
-        if (g_infinitybase.RemoveFigure(slot)) {
-            res["message"] = "Figure removed";
-            return HttpResponse{200, res};
-        } else {
-            res["message"] = "NO_FIGURE_IN_SLOT";
-            return HttpResponse{404, res};
-        }
-    });
+                if (!body.isObject()) {
+                    res["error"] = "INVALID_BODY";
+                    return HttpResponse{200, res};
+                }
+                auto removeRequest  = body.toObject();
+                const auto baseSlot = removeRequest["slot"];
+                if (!baseSlot.isNumber()) {
+                    res["error"] = "INVALID_SLOT_PARAM";
+                    return HttpResponse{400, res};
+                }
+                uint8_t slot = uint8_t(baseSlot.toDouble());
+                if (slot >= MAX_FIGURES || slot < 0) {
+                    res["error"] = "INVALID_SLOT";
+                    return HttpResponse{400, res};
+                }
+                if (g_infinitybase.RemoveFigure(slot)) {
+                    res["message"] = "Figure removed";
+                    return HttpResponse{200, res};
+                } else {
+                    res["message"] = "NO_FIGURE_IN_SLOT";
+                    return HttpResponse{404, res};
+                }
+            });
 
-    server.when("/device/infinity/load")->posted([](const HttpRequest &req) {
-        miniJson::Json::_object res;
-        auto body = req.json();
+    server.when("/device/infinity/load")
+            ->options([](const HttpRequest &req) {
+                HttpResponse res(200);
+                res["Access-Control-Allow-Methods"] = "POST, OPTIONS";
+                res["Access-Control-Allow-Headers"] = "Content-Type";
+                res["Access-Control-Max-Age"]       = "86400";
+                return res;
+            })
+            ->posted([](const HttpRequest &req) {
+                miniJson::Json::_object res;
+                auto body = req.json();
 
-        if (!body.isObject()) {
-            res["error"] = "INVALID_BODY";
-            return HttpResponse{200, res};
-        }
-        auto loadRequest      = body.toObject();
-        std::string file      = loadRequest["file"].toString();
-        const auto baseSlot = loadRequest["slot"];
-        if (!baseSlot.isNumber()) {
-            res["error"] = "INVALID_SLOT_PARAM";
-            return HttpResponse{400, res};
-        }
-        uint8_t slot = uint8_t(baseSlot.toDouble());
-        if (slot >= MAX_FIGURES || slot < 0) {
-            res["error"] = "INVALID_SLOT";
-            return HttpResponse{400, res};
-        }
-        std::array<uint8_t, INF_FIGURE_SIZE> fileData;
-        int ret_code = FSUtils::ReadFromFile(file.c_str(), fileData.data(), fileData.size());
-        if (ret_code == fileData.size()) {
-            if (g_infinitybase.LoadFigure(fileData, file, slot) == 0) {
-                res["error"] = "FAILED_TO_LOAD_FIGURE";
-                return HttpResponse{404, res};
-            }
-            res["message"] = "Figure loaded";
-            return HttpResponse{200, res};
-        } else {
-            res["error"] = "FIGURE_FILE_TOO_SMALL";
-            return HttpResponse{400, res};
-        }
-    });
+                if (!body.isObject()) {
+                    res["error"] = "INVALID_BODY";
+                    return HttpResponse{200, res};
+                }
+                auto loadRequest    = body.toObject();
+                std::string file    = "/vol/external01/wiiu/re_nsyshid/" + loadRequest["file"].toString();
+                const auto baseSlot = loadRequest["slot"];
+                if (!baseSlot.isNumber()) {
+                    res["error"] = "INVALID_SLOT_PARAM";
+                    return HttpResponse{400, res};
+                }
+                uint8_t slot = uint8_t(baseSlot.toDouble());
+                if (slot >= MAX_FIGURES || slot < 0) {
+                    res["error"] = "INVALID_SLOT";
+                    return HttpResponse{400, res};
+                }
+                std::array<uint8_t, INF_FIGURE_SIZE> fileData;
+                int ret_code = FSUtils::ReadFromFile(file.c_str(), fileData.data(), fileData.size());
+                if (ret_code == fileData.size()) {
+                    if (g_infinitybase.LoadFigure(fileData, file, slot) == 0) {
+                        res["error"] = "FAILED_TO_LOAD_FIGURE";
+                        return HttpResponse{404, res};
+                    }
+                    res["message"] = "Figure loaded";
+                    return HttpResponse{200, res};
+                } else {
+                    res["error"] = "FIGURE_FILE_TOO_SMALL";
+                    return HttpResponse{400, res};
+                }
+            });
 }

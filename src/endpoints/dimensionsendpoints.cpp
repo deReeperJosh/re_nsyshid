@@ -41,106 +41,130 @@ void registerDimensionsEndpoints(HttpServer &server) {
         return HttpResponse{200, ret};
     });
 
-    server.when("/device/dimensions/remove")->posted([](const HttpRequest &req) {
-        miniJson::Json::_object res;
-        auto body = req.json();
+    server.when("/device/dimensions/remove")
+            ->options([](const HttpRequest &req) {
+                HttpResponse res(200);
+                res["Access-Control-Allow-Methods"] = "POST, OPTIONS";
+                res["Access-Control-Allow-Headers"] = "Content-Type";
+                res["Access-Control-Max-Age"]       = "86400";
+                return res;
+            })
+            ->posted([](const HttpRequest &req) {
+                miniJson::Json::_object res;
+                auto body = req.json();
 
-        if (!body.isObject()) {
-            res["error"] = "INVALID_BODY";
-            return HttpResponse{200, res};
-        }
-        auto removeRequest = body.toObject();
-        const auto padSlot = removeRequest["slot"];
-        if (!padSlot.isNumber()) {
-            res["error"] = "INVALID_SLOT_PARAM";
-            return HttpResponse{400, res};
-        }
-        uint8_t slot = uint8_t(padSlot.toDouble());
-        if (slot >= 7 || slot < 0) {
-            res["error"] = "INVALID_SLOT";
-            return HttpResponse{400, res};
-        }
-        uint8_t pad = derivePadFromIndex(slot);
-        if (g_dimensionstoypad.RemoveFigure(pad, slot, true)) {
-            res["message"] = "Figure removed";
-            return HttpResponse{200, res};
-        } else {
-            res["message"] = "NO_FIGURE_IN_SLOT";
-            return HttpResponse{404, res};
-        }
-    });
+                if (!body.isObject()) {
+                    res["error"] = "INVALID_BODY";
+                    return HttpResponse{200, res};
+                }
+                auto removeRequest = body.toObject();
+                const auto padSlot = removeRequest["slot"];
+                if (!padSlot.isNumber()) {
+                    res["error"] = "INVALID_SLOT_PARAM";
+                    return HttpResponse{400, res};
+                }
+                uint8_t slot = uint8_t(padSlot.toDouble());
+                if (slot >= 7 || slot < 0) {
+                    res["error"] = "INVALID_SLOT";
+                    return HttpResponse{400, res};
+                }
+                uint8_t pad = derivePadFromIndex(slot);
+                if (g_dimensionstoypad.RemoveFigure(pad, slot, true)) {
+                    res["message"] = "Figure removed";
+                    return HttpResponse{200, res};
+                } else {
+                    res["message"] = "NO_FIGURE_IN_SLOT";
+                    return HttpResponse{404, res};
+                }
+            });
 
-    server.when("/device/dimensions/load")->posted([](const HttpRequest &req) {
-        miniJson::Json::_object res;
-        auto body = req.json();
+    server.when("/device/dimensions/load")
+            ->options([](const HttpRequest &req) {
+                HttpResponse res(200);
+                res["Access-Control-Allow-Methods"] = "POST, OPTIONS";
+                res["Access-Control-Allow-Headers"] = "Content-Type";
+                res["Access-Control-Max-Age"]       = "86400";
+                return res;
+            })
+            ->posted([](const HttpRequest &req) {
+                miniJson::Json::_object res;
+                auto body = req.json();
 
-        if (!body.isObject()) {
-            res["error"] = "INVALID_BODY";
-            return HttpResponse{400, res};
-        }
-        auto loadRequest   = body.toObject();
-        std::string file   = loadRequest["file"].toString();
-        const auto padSlot = loadRequest["slot"];
-        if (!padSlot.isNumber()) {
-            res["error"] = "INVALID_SLOT_PARAM";
-            return HttpResponse{400, res};
-        }
-        uint8_t slot = uint8_t(padSlot.toDouble());
-        if (slot >= 7 || slot < 0) {
-            res["error"] = "INVALID_SLOT";
-            return HttpResponse{400, res};
-        }
-        uint8_t pad = derivePadFromIndex(slot);
-        if (file.empty()) {
-            res["error"] = "MISSING_FILE_PARAM";
-            return HttpResponse{400, res};
-        }
-        std::array<uint8_t, DIM_FIGURE_SIZE> buf;
-        int result = FSUtils::ReadFromFile(file.c_str(), buf.data(), buf.size());
-        if (result != DIM_FIGURE_SIZE) {
-            res["error"] = "COULD_NOT_READ_FILE";
-            return HttpResponse{400, res};
-        }
-        uint32_t id = g_dimensionstoypad.LoadFigure(buf, file, pad, slot);
-        if (id == 0) {
-            res["error"] = "FAILED_TO_LOAD_FIGURE";
-            return HttpResponse{400, res};
-        } else {
-            res["message"]   = "Figure loaded";
-            res["figure_id"] = int(id);
-            return HttpResponse{200, res};
-        }
-    });
+                if (!body.isObject()) {
+                    res["error"] = "INVALID_BODY";
+                    return HttpResponse{400, res};
+                }
+                auto loadRequest   = body.toObject();
+                std::string file   = "/vol/external01/wiiu/re_nsyshid/" + loadRequest["file"].toString();
+                const auto padSlot = loadRequest["slot"];
+                if (!padSlot.isNumber()) {
+                    res["error"] = "INVALID_SLOT_PARAM";
+                    return HttpResponse{400, res};
+                }
+                uint8_t slot = uint8_t(padSlot.toDouble());
+                if (slot >= 7 || slot < 0) {
+                    res["error"] = "INVALID_SLOT";
+                    return HttpResponse{400, res};
+                }
+                uint8_t pad = derivePadFromIndex(slot);
+                if (file.empty()) {
+                    res["error"] = "MISSING_FILE_PARAM";
+                    return HttpResponse{400, res};
+                }
+                std::array<uint8_t, DIM_FIGURE_SIZE> buf;
+                int result = FSUtils::ReadFromFile(file.c_str(), buf.data(), buf.size());
+                if (result != DIM_FIGURE_SIZE) {
+                    res["error"] = "COULD_NOT_READ_FILE";
+                    return HttpResponse{400, res};
+                }
+                uint32_t id = g_dimensionstoypad.LoadFigure(buf, file, pad, slot);
+                if (id == 0) {
+                    res["error"] = "FAILED_TO_LOAD_FIGURE";
+                    return HttpResponse{400, res};
+                } else {
+                    res["message"]   = "Figure loaded";
+                    res["figure_id"] = int(id);
+                    return HttpResponse{200, res};
+                }
+            });
 
-    server.when("/device/dimensions/move")->posted([](const HttpRequest &req) {
-        miniJson::Json::_object res;
-        auto body = req.json();
+    server.when("/device/dimensions/move")
+            ->options([](const HttpRequest &req) {
+                HttpResponse res(200);
+                res["Access-Control-Allow-Methods"] = "POST, OPTIONS";
+                res["Access-Control-Allow-Headers"] = "Content-Type";
+                res["Access-Control-Max-Age"]       = "86400";
+                return res;
+            })
+            ->posted([](const HttpRequest &req) {
+                miniJson::Json::_object res;
+                auto body = req.json();
 
-        if (!body.isObject()) {
-            res["error"] = "INVALID_BODY";
-            return HttpResponse{400, res};
-        }
-        auto moveRequest   = body.toObject();
-        const auto oldSlot = moveRequest["oldSlot"];
-        const auto newSlot = moveRequest["newSlot"];
-        if (!oldSlot.isNumber() || !newSlot.isNumber()) {
-            res["error"] = "INVALID_SLOT_PARAM";
-            return HttpResponse{400, res};
-        }
-        uint8_t oldSlotValue = uint8_t(oldSlot.toDouble());
-        uint8_t newSlotValue = uint8_t(newSlot.toDouble());
-        if (oldSlotValue >= 7 || oldSlotValue < 0 || newSlotValue >= 7 || newSlotValue < 0) {
-            res["error"] = "INVALID_SLOT";
-            return HttpResponse{400, res};
-        }
-        uint8_t oldPad = derivePadFromIndex(oldSlotValue);
-        uint8_t newPad = derivePadFromIndex(newSlotValue);
-        if (g_dimensionstoypad.MoveFigure(newPad, newSlotValue, oldPad, oldSlotValue)) {
-            res["message"] = "Figure moved";
-            return HttpResponse{200, res};
-        } else {
-            res["message"] = "NO_FIGURE_IN_OLD_SLOT_OR_NEW_SLOT_OCCUPIED";
-            return HttpResponse{400, res};
-        }
-    });
+                if (!body.isObject()) {
+                    res["error"] = "INVALID_BODY";
+                    return HttpResponse{400, res};
+                }
+                auto moveRequest   = body.toObject();
+                const auto oldSlot = moveRequest["oldSlot"];
+                const auto newSlot = moveRequest["newSlot"];
+                if (!oldSlot.isNumber() || !newSlot.isNumber()) {
+                    res["error"] = "INVALID_SLOT_PARAM";
+                    return HttpResponse{400, res};
+                }
+                uint8_t oldSlotValue = uint8_t(oldSlot.toDouble());
+                uint8_t newSlotValue = uint8_t(newSlot.toDouble());
+                if (oldSlotValue >= 7 || oldSlotValue < 0 || newSlotValue >= 7 || newSlotValue < 0) {
+                    res["error"] = "INVALID_SLOT";
+                    return HttpResponse{400, res};
+                }
+                uint8_t oldPad = derivePadFromIndex(oldSlotValue);
+                uint8_t newPad = derivePadFromIndex(newSlotValue);
+                if (g_dimensionstoypad.MoveFigure(newPad, newSlotValue, oldPad, oldSlotValue)) {
+                    res["message"] = "Figure moved";
+                    return HttpResponse{200, res};
+                } else {
+                    res["message"] = "NO_FIGURE_IN_OLD_SLOT_OR_NEW_SLOT_OCCUPIED";
+                    return HttpResponse{400, res};
+                }
+            });
 }

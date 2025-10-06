@@ -407,6 +407,11 @@ public:
         return this;
     }
 
+    HttpHandlerBuilder *options(HandlerFunc h) {
+        mHandlers.insert(std::pair<HttpRequestMethod, HandlerFunc>(HttpRequestMethod::OPTIONS, std::move(h)));
+        return this;
+    }
+
     HttpHandlerBuilder *serveFile(std::string name) {
         return requested([name](const HttpRequest &) {
             std::ifstream t(name);
