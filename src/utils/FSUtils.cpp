@@ -48,6 +48,14 @@ int FSUtils::WriteToFile(const char* path, const void* data, uint32_t size)
     FSAFileHandle fileHandle;
     FSError err = FSAOpenFileEx(clientHandle, path, "wb", (FSMode) 0x666, FS_OPEN_FLAG_NONE, 0, &fileHandle);
     if (err < 0) {
+        if (err == FS_ERROR_INVALID_CLIENTHANDLE) {
+            Finalize();
+            Initialize();
+            err = FSAOpenFileEx(clientHandle, path, "wb", (FSMode) 0x666, FS_OPEN_FLAG_NONE, 0, &fileHandle);
+        }
+    }
+
+    if (err < 0) {
         return err;
     }
 
@@ -85,6 +93,14 @@ int FSUtils::ReadFromFile(const char* path, void* data, uint32_t size)
 
     FSAFileHandle fileHandle;
     FSError err = FSAOpenFileEx(clientHandle, path, "rb", (FSMode) 0x666, FS_OPEN_FLAG_NONE, 0, &fileHandle);
+    if (err < 0) {
+        if (err == FS_ERROR_INVALID_CLIENTHANDLE) {
+            Finalize();
+            Initialize();
+            err = FSAOpenFileEx(clientHandle, path, "rb", (FSMode) 0x666, FS_OPEN_FLAG_NONE, 0, &fileHandle);
+        }
+    }
+
     if (err < 0) {
         return err;
     }
