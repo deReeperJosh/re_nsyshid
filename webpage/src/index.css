@@ -1,3 +1,28 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Toast animations */
+@keyframes toast-in-right {
+  from { opacity: 0; transform: translateX(16px) scale(0.98); }
+  to   { opacity: 1; transform: translateX(0)    scale(1); }
+}
+@keyframes toast-out-right {
+  from { opacity: 1; transform: translateX(0)    scale(1); }
+  to   { opacity: 0; transform: translateX(16px) scale(0.98); }
+}
+
+/* Base + exit state (timings must match the JS exitMs) */
+.toast {
+  animation: toast-in-right 220ms cubic-bezier(.2, .9, .2, 1) both;
+  will-change: transform, opacity;
+}
+.toast--exit {
+  animation: toast-out-right 180ms ease-in forwards;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .toast, .toast--exit { animation: none; }
+}
+
