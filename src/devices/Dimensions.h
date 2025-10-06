@@ -117,6 +117,7 @@ public:
     bool TempRemove(uint8_t index);
     bool CancelRemove(uint8_t index);
     uint32_t LoadFigure(const std::array<uint8_t, DIM_FIGURE_SIZE> &buf, std::string file, uint8_t pad, uint8_t index);
+    bool CreateFigure(std::string pathName, uint32_t id);
     bool MoveFigure(uint8_t pad, uint8_t index, uint8_t oldPad, uint8_t oldIndex);
     static std::map<const uint32_t, const char *> GetListMinifigs();
     static std::map<const uint32_t, const char *> GetListTokens();

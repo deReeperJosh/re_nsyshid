@@ -187,6 +187,14 @@ void registerDimensionsEndpoints(HttpServer &server) {
                 }
                 uint16_t id      = uint16_t(figureId.toDouble());
                 std::string name = g_dimensionstoypad.FindFigure(id);
+                if (g_dimensionstoypad.CreateFigure("/vol/external01/wiiu/re_nsyshid/Dimensions/" + name + ".bin", id)) {
+                    res["message"] = "Figure created";
+                    res["file"]    = "/Dimensions/" + name + ".bin";
+                    return HttpResponse{200, res};
+                } else {
+                    res["error"] = "FAILED_TO_CREATE_FIGURE";
+                    return HttpResponse{400, res};
+                }
                 return HttpResponse{404, res};
             });
 }
