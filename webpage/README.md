@@ -9,6 +9,12 @@ This guide explains how to run this web dashboard **with Vite** and how to use t
 - Node.js 18+ (or 20+)
 - npm / yarn / pnpm
 - Your re_nsyshid backend running locally
+- This project locally checked out with git:
+
+```console
+  git clone https://github.com/deReeperJosh/re_nsyshid.git
+  cd re_nsyshid/webpage
+```
 
 ---
 
