@@ -4,8 +4,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <format>
+#include <fstream>
+#include <iostream>
 #include <optional>
-#include <random>
 #include <span>
 
 #include "utils/FSUtils.hpp"
@@ -1112,6 +1113,48 @@ uint32_t DimensionsToypad::LoadFigure(const std::array<uint8_t, 0x2D * 0x04> &bu
     return id;
 }
 
+bool DimensionsToypad::CreateFigure(std::string pathName, uint32_t id) {
+    std::ofstream dimFile(pathName.c_str(), std::ios::binary);
+    if (!dimFile) {
+        return false;
+    }
+
+    std::array<uint8_t, 0x2D * 0x04> fileData{};
+    RandomUID(fileData);
+    fileData[3] = id & 0xFF;
+
+    // Only characters are created with their ID encrypted and stored in pages 36 and 37,
+    // as well as a password stored in page 43. Blank tags have their information populated
+    // by the game when it calls the write_block command.
+    if (id != 0 && id < 1000) {
+        const std::array<uint8_t, 16> figureKey = GenerateFigureKey(fileData);
+
+        std::array<uint8_t, 8> valueToEncrypt = {uint8_t(id & 0xFF), uint8_t((id >> 8) & 0xFF), uint8_t((id >> 16) & 0xFF), uint8_t((id >> 24) & 0xFF),
+                                                 uint8_t(id & 0xFF), uint8_t((id >> 8) & 0xFF), uint8_t((id >> 16) & 0xFF), uint8_t((id >> 24) & 0xFF)};
+
+        std::array<uint8_t, 8> encrypted = Encrypt(valueToEncrypt, figureKey);
+
+        std::memcpy(&fileData[36 * 4], &encrypted[0], 4);
+        std::memcpy(&fileData[37 * 4], &encrypted[4], 4);
+
+        std::memcpy(&fileData[43 * 4], PWDGenerate(fileData).data(), 4);
+    } else {
+        // Page 36 stores gadget/vehicle IDs as little endian
+        fileData[36 * 4]       = id & 0xFF;
+        fileData[(36 * 4) + 1] = (id >> 8) & 0xFF;
+        fileData[(36 * 4) + 2] = (id >> 16) & 0xFF;
+        fileData[(36 * 4) + 3] = (id >> 24) & 0xFF;
+        // Page 38 is used as verification for blank tags
+        fileData[(38 * 4) + 1] = 1;
+    }
+
+    dimFile.write((char *) fileData.data(), fileData.size());
+
+    dimFile.close();
+
+    return true;
+}
+
 bool DimensionsToypad::MoveFigure(uint8_t pad, uint8_t index, uint8_t oldPad, uint8_t oldIndex) {
     if (oldIndex == index) {
         // Don't bother removing and loading again, just send response to the game
@@ -1310,18 +1353,14 @@ DimensionsToypad::GetFigureByIndex(uint8_t index) {
 }
 
 void DimensionsToypad::RandomUID(std::array<uint8_t, 0x2D * 0x04> &uid_buffer) {
+    srand(time(NULL));
     uid_buffer[0] = 0x04;
+    uid_buffer[1] = rand() % 256;
+    uid_buffer[2] = rand() % 256;
+    uid_buffer[4] = rand() % 256;
+    uid_buffer[5] = rand() % 256;
+    uid_buffer[6] = rand() % 256;
     uid_buffer[7] = 0x80;
-
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_int_distribution<int> dist(0, 255);
-
-    uid_buffer[1] = dist(mt);
-    uid_buffer[2] = dist(mt);
-    uid_buffer[4] = dist(mt);
-    uid_buffer[5] = dist(mt);
-    uid_buffer[6] = dist(mt);
 }
 
 uint8_t DimensionsToypad::GenerateChecksum(const std::array<uint8_t, 32> &data,

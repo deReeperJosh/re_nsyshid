@@ -2,7 +2,8 @@
 
 re_nsyshid is a Wii U Plugin which allows end users to emulate Toys to Life USB peripheral devices such as the Skylander Portal of Power, the Disney Infinity Base and the LEGO Dimensions Toypad.
 
-Requires the [Aroma](https://github.com/wiiu-env/Aroma) environment.  
+Requires the [Aroma](https://github.com/wiiu-env/Aroma) environment.
+Requires the [NotificationModule](https://github.com/wiiu-env/NotificationModule) in `sd:/wiiu/environments/aroma/modules`.
 
 > :warning: This plugin is still a work in progress, and some issues are expected!
 
@@ -21,6 +22,7 @@ Includes some code repurposed from the [re_nfpii](https://github.com/GaryOderNic
 - Enable Emulation, and choose an Emulated Device.
 - Choose a Figure for your chosen device, for example enter Skylander Manager if you chose the Skylander Portal, and choose a Skylander to load in a specific slot.
 - Figures can be quickly removed from slots by hovering over the currently loaded slot and pressing the X button
+-Optionally, you can enable the module to accept incoming HTTP requests, by setting Enable Server as true in the first page of the plugin. This allows requests to be made so that the plugin menu doesn't need to be opened every time you want to Load/Remove/Create/Move a figure. Details of this can be found [here](webpage/README.md)
 
 ## Planned features
 

@@ -1,6 +1,8 @@
-#include "utils/logger.h"
 #include "utils/FSUtils.hpp"
+#include "utils/logger.h"
 #include <coreinit/filesystem.h>
+#include <coreinit/thread.h>
+#include <notifications/notifications.h>
 #include <wups.h>
 #include <wups/button_combo/api.h>
 #include <wups/config/WUPSConfigCategory.h>
@@ -15,6 +17,14 @@
 #include "config/ConfigItemSelectInfinity.hpp"
 #include "config/ConfigItemSelectSkylander.hpp"
 #include "re_nsyshid.h"
+
+#include "http.hpp"
+
+#include "endpoints/dimensionsendpoints.h"
+#include "endpoints/files.h"
+#include "endpoints/infinityendpoints.h"
+#include "endpoints/skylanderendpoints.h"
+#include "endpoints/status.h"
 
 #include <forward_list>
 
@@ -33,20 +43,7 @@ WUPS_PLUGIN_VERSION(VERSION_STRING(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH))
 WUPS_PLUGIN_AUTHOR("deReeperJosh");
 WUPS_PLUGIN_LICENSE("GPLv2");
 
-#define LOG_FS_OPEN_CONFIG_ID             "logFSOpen"
-#define BUTTON_COMBO_PRESS_DOWN_CONFIG_ID "pressDownItem"
-#define BUTTON_COMBO_HOLD_CONFIG_ID       "holdItem"
-#define OTHER_EXAMPLE_BOOL_CONFIG_ID      "otherBoolItem"
-#define OTHER_EXAMPLE2_BOOL_CONFIG_ID     "other2BoolItem"
-#define INTEGER_RANGE_EXAMPLE_CONFIG_ID   "intRangeExample"
-
-#define TAG_EMULATION_PATH                std::string("/vol/external01/wiiu/re_nsyshid/")
-
-/**
-    All of this defines can be used in ANY file.
-    It's possible to split it up into multiple files.
-
-**/
+#define TAG_EMULATION_PATH std::string("/vol/external01/wiiu/re_nsyshid/")
 
 WUPS_USE_WUT_DEVOPTAB();        // Use the wut devoptabs
 WUPS_USE_STORAGE("re_nsyshid"); // Unique id for the storage api
@@ -57,6 +54,20 @@ WUPS_USE_STORAGE("re_nsyshid"); // Unique id for the storage api
 EmulationStatus sEmulationStatus = EMULATION_STATUS_DEFAULT_VALUE;
 DeviceToEmulate sEmulatedDevice  = EMULATED_DEVICE_DEFAULT_VALUE;
 
+#define ENABLE_SERVER_DEFAULT_VALUE false
+#define ENABLE_SERVER_CONFIG_ID     "enableServer"
+bool enableServer = ENABLE_SERVER_DEFAULT_VALUE;
+
+HttpServer server;
+bool server_made = false;
+
+void enableServerChanged(ConfigItemBoolean *item, bool newValue) {
+    // If the value has changed, we store it in the storage.
+    if (newValue != enableServer)
+        WUPSStorageAPI::Store(ENABLE_SERVER_CONFIG_ID, newValue);
+
+    enableServer = newValue;
+}
 
 void multipleValueItemChanged(ConfigItemMultipleValues *item, uint32_t newValue) {
     DEBUG_FUNCTION_LINE_INFO("New value in emulationStatus: %d", newValue);
@@ -87,6 +98,59 @@ static void dimensionsFigureSelectedCallback(ConfigItemDimensionsPad *dimensions
     WUPSStorageAPI_StoreString(nullptr, ("currentDimensions" + std::to_string(index)).c_str(), filePath);
 }
 
+void make_server() {
+    if (server_made) {
+        return;
+    }
+
+    server_made = true;
+    DEBUG_FUNCTION_LINE("Server started.");
+
+    try {
+        // Empty endpoint to allow for device discovery.
+        server.when("/")->requested([](const HttpRequest &req) {
+            return HttpResponse{200, "text/plain", "re_nsyshid"};
+        });
+
+        registerStatusEndpoints(server);
+        registerSkylanderEndpoints(server);
+        registerInfinityEndpoints(server);
+        registerDimensionsEndpoints(server);
+        registerFileEndpoints(server);
+
+        // TODO: Make the port configurable
+        server.startListening(8853);
+    } catch (std::exception &e) {
+        // FIXME: write good strings that can easily be translated
+        NotificationModule_AddErrorNotification("re_nsyshid threw an exception. If the problem persists, check system logs.");
+        DEBUG_FUNCTION_LINE_INFO("Exception thrown in the HTTP server: %s\n", e.what());
+    }
+}
+
+void stop_server() {
+    // dont shut down what doesnt exist
+    if (!server_made) return;
+
+    server.shutdown();
+    server_made = false;
+
+    DEBUG_FUNCTION_LINE("Server shut down.");
+}
+
+void make_server_on_thread() {
+    try {
+        std::jthread thready(make_server);
+
+        auto threadHandle = (OSThread *) thready.native_handle();
+        OSSetThreadName(threadHandle, "re_nyshid_http_thread");
+        OSSetThreadAffinity(threadHandle, OS_THREAD_ATTRIB_AFFINITY_CPU2);
+
+        thready.detach();
+    } catch (std::exception &e) {
+        DEBUG_FUNCTION_LINE_INFO("Exception thrown trying to make the server thread: %s\n", e.what());
+    }
+}
+
 WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle rootHandle) {
     // To use the C++ API, we create new WUPSConfigCategory from the root handle!
     WUPSConfigCategory root = WUPSConfigCategory(rootHandle);
@@ -114,10 +178,18 @@ WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle ro
             DEBUG_FUNCTION_LINE_ERR("GetOrStoreDefault failed: %s (%d)",
                                     WUPSStorageAPI_GetStatusStr(storageRes), storageRes);
         }
+        if ((storageRes = WUPSStorageAPI::GetOrStoreDefault(ENABLE_SERVER_CONFIG_ID, enableServer,
+                                                            ENABLE_SERVER_DEFAULT_VALUE)) != WUPS_STORAGE_ERROR_SUCCESS) {
+            DEBUG_FUNCTION_LINE_ERR("GetOrStoreDefault failed: %s (%d)",
+                                    WUPSStorageAPI_GetStatusStr(storageRes), storageRes);
+        }
         if ((storageRes = WUPSStorageAPI::SaveStorage()) != WUPS_STORAGE_ERROR_SUCCESS) {
             DEBUG_FUNCTION_LINE_ERR("SaveStorage failed: %s (%d)",
                                     WUPSStorageAPI_GetStatusStr(storageRes), storageRes);
         }
+
+
+        root.add(WUPSConfigItemBoolean::Create(ENABLE_SERVER_CONFIG_ID, "Enable Server", ENABLE_SERVER_DEFAULT_VALUE, enableServer, enableServerChanged));
 
         // It comes in two variants.
         // - "WUPSConfigItemMultipleValues::CreateFromValue" will take a default and current **value**
@@ -188,6 +260,11 @@ WUPSConfigAPICallbackStatus ConfigMenuOpenedCallback(WUPSConfigCategoryHandle ro
 void ConfigMenuClosedCallback() {
     DEBUG_FUNCTION_LINE("Saving config of re_nsyshid");
     WUPSStorageAPI::SaveStorage();
+
+    if (server_made && !enableServer) stop_server();
+    else if (!server_made && enableServer) {
+        make_server_on_thread();
+    }
 }
 
 /**
@@ -213,6 +290,7 @@ INITIALIZE_PLUGIN() {
 DEINITIALIZE_PLUGIN() {
     // Remove all button combos from this plugin.
     DEBUG_FUNCTION_LINE("DEINITIALIZE_PLUGIN of re_nsyshid!");
+    stop_server();
     FSUtils::Finalize();
 }
 
@@ -224,6 +302,9 @@ ON_APPLICATION_START() {
     FSUtils::Initialize();
 
     DEBUG_FUNCTION_LINE("ON_APPLICATION_START of re_nsyshid!");
+
+    if (!enableServer) return;
+    make_server_on_thread();
 }
 
 /**
@@ -233,6 +314,9 @@ ON_APPLICATION_ENDS() {
     DEBUG_FUNCTION_LINE("ON_APPLICATION_ENDS of re_nsyshid!");
     ResetClientLibrary();
     deinitLogging();
+
+    if (!enableServer) return;
+    stop_server();
 }
 
 /**

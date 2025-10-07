@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import SkylanderPanel from "./components/DevicePanels/SkylanderPanel";
+import InfinityPanel from "./components/DevicePanels/InfinityPanel";
+import DimensionsPanel from "./components/DevicePanels/DimensionsPanel";
+import CharacterPicker from "./components/Create/CharacterPicker";
+import { SKYLANDER_LIST } from "./data/skylanders";
+import { INFINITY_LIST } from "./data/infinity";
+import { DIMENSIONS_LIST } from "./data/dimensions";
+
+
 
 export default function Dashboard() {
     const [ip, setIp] = useState("");
     const [status, setStatus] = useState(null);
     const [device, setDevice] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [message, setMessage] = useState("");
     const [selectedDevice, setSelectedDevice] = useState("none");
     const [deviceData, setDeviceData] = useState({});
     const [fileBrowserVisible, setFileBrowserVisible] = useState(false);
@@ -14,11 +22,49 @@ export default function Dashboard() {
     const [currentPath, setCurrentPath] = useState("");
     const [activeSlot, setActiveSlot] = useState(null);
     const [loadingFiles, setLoadingFiles] = useState(false);
+    const [creatingFile, setCreatingFile] = useState(false);
     const [createModalVisible, setCreateModalVisible] = useState(false);
     const [createId, setCreateId] = useState("");
     const [createVar, setCreateVar] = useState("");
+    const [pickerOpen, setPickerOpen] = useState(false);
+    const [pickerItems, setPickerItems] = useState([]);
+    const [pickerTitle, setPickerTitle] = useState("Choose Item");
+
 
     const navigate = useNavigate();
+    // --- Toast / Popup system (animated) ---
+    const [toasts, setToasts] = useState([]);
+
+    function toast(message, type = "info", duration = 3000) {
+        const id = (crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2));
+        const exitMs = 180; // must match CSS exit animation
+
+        // add toast
+        setToasts((t) => [...t, { id, message, type, exiting: false }]);
+
+        // schedule exit -> remove
+        setTimeout(() => {
+            setToasts((t) => t.map((x) => (x.id === id ? { ...x, exiting: true } : x)));
+            setTimeout(() => {
+                setToasts((t) => t.filter((x) => x.id !== id));
+            }, exitMs);
+        }, duration);
+    }
+
+    function dismissToast(id) {
+        const exitMs = 180;
+        setToasts((t) => t.map((x) => (x.id === id ? { ...x, exiting: true } : x)));
+        setTimeout(() => {
+            setToasts((t) => t.filter((x) => x.id !== id));
+        }, exitMs);
+    }
+
+    const toastBg = (type) =>
+        type === "success" ? "bg-green-600"
+            : type === "error" ? "bg-red-600"
+                : "bg-gray-800";
+
+
 
     const deviceNames = {
         0: "none",
@@ -34,6 +80,13 @@ export default function Dashboard() {
         dimensions: "Dimensions Toypad",
     };
 
+    const createDisplayNames = {
+        none: "None",
+        skylander: "Skylander",
+        infinity: "Infinity Figure",
+        dimensions: "Dimensions Figure",
+    };
+
     // Fetch status from server
     const fetchStatus = async (ipAddress) => {
         setLoading(true);
@@ -46,9 +99,8 @@ export default function Dashboard() {
             setSelectedDevice(deviceNames[data.device] || "none");
 
             if (data.device !== 0) fetchDeviceData(ipAddress, deviceNames[data.device]);
-            setMessage("");
         } catch (e) {
-            setMessage("❌ Could not fetch status from the server.");
+            toast("❌ Could not fetch status from the server.", 'error')
             setDeviceData({});
         } finally {
             setLoading(false);
@@ -63,7 +115,7 @@ export default function Dashboard() {
             setDeviceData(data);
         } catch (e) {
             setDeviceData({});
-            setMessage(`⚠️ Failed to fetch ${deviceDisplayNames[deviceType]} data.`);
+            toast(`⚠️ Failed to fetch ${deviceDisplayNames[deviceType]} data.`, 'error')
         }
     };
 
@@ -72,9 +124,9 @@ export default function Dashboard() {
             const endpoint = enable ? "enable" : "disable";
             await fetch(`http://${ip}:8853/status/${endpoint}`, { method: "POST" });
             await fetchStatus(ip);
-            setMessage(enable ? "✅ Emulation enabled" : "⛔ Emulation disabled");
+            toast(enable ? "✅ Emulation enabled" : "⛔ Emulation disabled", 'success')
         } catch {
-            setMessage("⚠️ Failed to toggle emulation.");
+            toast("⚠️ Failed to toggle emulation.", 'error')
         }
     };
 
@@ -86,9 +138,9 @@ export default function Dashboard() {
                 body: type,
             });
             await fetchStatus(ip);
-            setMessage(`✅ Device set to ${deviceDisplayNames[type]}`);
+            toast(`✅ Device set to ${deviceDisplayNames[type]}`, 'success')
         } catch {
-            setMessage("⚠️ Failed to change device.");
+            toast("⚠️ Failed to change device.", 'error')
         }
     };
 
@@ -110,10 +162,10 @@ export default function Dashboard() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ slot: slotNumber }),
             });
-            setMessage(`✅ Removed slot ${slotNumber}`);
+            toast(`✅ Removed slot ${slotNumber}`, 'success')
             fetchStatus(ip);
         } catch {
-            setMessage(`⚠️ Failed to remove slot ${slotNumber}`);
+            toast(`⚠️ Failed to remove slot ${slotNumber}`, 'error')
         }
     };
 
@@ -132,7 +184,7 @@ export default function Dashboard() {
             setCurrentFiles(data.files);
             setCurrentPath(path);
         } catch (err) {
-            setMessage("⚠️ Failed to fetch files");
+            toast("⚠️ Failed to fetch files", 'error')
             setCurrentFiles([]);
         } finally {
             setLoadingFiles(false);
@@ -155,11 +207,11 @@ export default function Dashboard() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ slot, file: filePath }),
             });
-            setMessage(`✅ Loaded ${filePath} into slot ${slot}`);
+            toast(`✅ Loaded ${filePath} into slot ${slot}`, 'success')
             fetchStatus(ip);
             setFileBrowserVisible(false);
         } catch {
-            setMessage(`⚠️ Failed to load file`);
+            toast(`⚠️ Failed to load file`, 'error')
         }
     };
 
@@ -178,20 +230,20 @@ export default function Dashboard() {
         // Validate inputs
         if (selectedDevice === "skylander") {
             if (isNaN(idVal) || idVal < 0 || idVal > 65535) {
-                setMessage("⚠️ ID must be between 0 and 65535");
+                toast("⚠️ ID must be between 0 and 65535", 'error')
                 return;
             }
             if (isNaN(varVal) || varVal < 0 || varVal > 65535) {
-                setMessage("⚠️ Variant must be between 0 and 65535");
+                toast("⚠️ Variant must be between 0 and 65535", 'error')
                 return;
             }
         } else {
             if (isNaN(idVal) || idVal < 0 || idVal > 4294967295) {
-                setMessage("⚠️ ID must be between 0 and 4294967295");
+                toast("⚠️ ID must be between 0 and 4294967295", 'error')
                 return;
             }
         }
-
+        setCreatingFile(true);
         try {
             const payload =
                 selectedDevice === "skylander"
@@ -209,16 +261,61 @@ export default function Dashboard() {
 
             if (data.file) {
                 await loadFileIntoSlot(activeSlot, data.file);
-                setMessage(`✅ Created and loaded new file into slot ${activeSlot}`);
+                toast(`✅ Created and loaded new file into slot ${activeSlot}`, 'success')
             } else {
-                setMessage("⚠️ File creation returned no file path");
+                toast("⚠️ File creation returned no file path", 'error')
             }
 
             setCreateModalVisible(false);
         } catch {
-            setMessage("⚠️ Failed to create file");
+            toast("⚠️ Failed to create file", 'error')
+        } finally {
+            setCreatingFile(false);
         }
     };
+
+    const moveDimensionsSlot = async (oldSlot, newSlot) => {
+        try {
+            await fetch(`http://${ip}:8853/device/dimensions/move`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ oldSlot, newSlot }),
+            });
+            // Optional: toast success if you have a toast system
+            // toast(`✅ Moved from ${oldSlot} to ${newSlot}`, "success");
+            await fetchStatus(ip); // refresh panel
+        } catch (e) {
+            // toast("⚠️ Failed to move slot", "error");
+            console.error(e);
+        }
+    };
+
+    const openPickerForDevice = () => {
+        if (selectedDevice === "skylander") {
+            setPickerItems(SKYLANDER_LIST);
+            setPickerTitle("Choose Skylander");
+        } else if (selectedDevice === "infinity") {
+            setPickerItems(INFINITY_LIST);
+            setPickerTitle("Choose Infinity Figure");
+        } else if (selectedDevice === "dimensions") {
+            setPickerItems(DIMENSIONS_LIST);
+            setPickerTitle("Choose Dimensions Tag/Token");
+        } else {
+            setPickerItems([]);
+            setPickerTitle("Choose Item");
+        }
+        setPickerOpen(true);
+    };
+
+
+
+    const commonPanelProps = {
+        deviceData,                  // your current device data object from the API
+        onCreate: openCreateModal,   // or whatever you call to show the create modal
+        onLoad: (slot) => openFileBrowser(selectedDevice, slot),
+        onRemove: (slot) => removeSlot(selectedDevice, slot),
+    };
+
 
     useEffect(() => {
         const savedIp = localStorage.getItem("deviceIp");
@@ -231,269 +328,318 @@ export default function Dashboard() {
     }, []);
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-6 relative">
-            <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-6xl">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold">Emulation Dashboard</h1>
-                    <div className="flex gap-4">
-                        <button
-                            onClick={() => fetchStatus(ip)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition"
-                        >
-                            Refresh
-                        </button>
-                        <button
-                            onClick={handleDisconnect}
-                            className="px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition"
-                        >
-                            Disconnect
-                        </button>
-                    </div>
-                </div>
-
-                {loading ? (
-                    <p className="text-center text-gray-600">⏳ Loading status...</p>
-                ) : (
-                    <div className="flex flex-col lg:flex-row gap-6">
-                        {/* Left Panel */}
-                        <div className="flex-1 bg-gray-50 p-6 rounded-xl shadow-md">
-                            <p className="text-gray-700 mb-2">
-                                Connected to: <strong>{ip}</strong>
-                            </p>
-                            <p className="text-gray-700 mb-2">
-                                Emulation Status:{" "}
-                                <strong
-                                    className={status === 1 ? "text-green-600" : "text-red-600"}
-                                >
-                                    {status === 1 ? "Enabled" : "Disabled"}
-                                </strong>
-                            </p>
-                            <p className="text-gray-700 mb-4">
-                                Device: <strong>{deviceDisplayNames[selectedDevice]}</strong>
-                            </p>
-
-                            <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                                <button
-                                    onClick={() => toggleEmulation(true)}
-                                    disabled={status === 1}
-                                    className={`w-full px-4 py-2 rounded-xl text-white font-medium transition ${status === 1
-                                            ? "bg-gray-400 cursor-not-allowed"
-                                            : "bg-green-600 hover:bg-green-700"
-                                        }`}
-                                >
-                                    Enable Emulation
-                                </button>
-                                <button
-                                    onClick={() => toggleEmulation(false)}
-                                    disabled={status === 0}
-                                    className={`w-full px-4 py-2 rounded-xl text-white font-medium transition ${status === 0
-                                            ? "bg-gray-400 cursor-not-allowed"
-                                            : "bg-red-600 hover:bg-red-700"
-                                        }`}
-                                >
-                                    Disable Emulation
-                                </button>
-                            </div>
-
-                            <div className="mb-6">
-                                <label className="block text-sm font-medium mb-2">
-                                    Select Device Type
-                                </label>
-                                <select
-                                    value={selectedDevice}
-                                    onChange={handleDeviceChange}
-                                    className="border border-gray-300 rounded-xl p-2 w-full text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                    <option value="none">None</option>
-                                    <option value="skylander">Skylander Portal</option>
-                                    <option value="infinity">Infinity Base</option>
-                                    <option value="dimensions">Dimensions Toypad</option>
-                                </select>
-                            </div>
-
-                            {message && (
-                                <div className="text-center text-sm font-medium text-gray-700 mt-4">
-                                    {message}
-                                </div>
-                            )}
+        <>
+            <div className="fixed top-4 right-4 z-50 space-y-2">
+                {toasts.map((t) => (
+                    <div
+                        key={t.id}
+                        className={`toast ${t.exiting ? "toast--exit" : ""} ${toastBg(t.type)} rounded-xl px-4 py-2 shadow-lg text-white text-sm`}
+                        role="status"
+                    >
+                        <div className="flex items-start gap-3">
+                            <span className="pr-6">{t.message}</span>
+                            <button
+                                className="ml-auto -mr-2 px-2 text-white/80 hover:text-white"
+                                onClick={() => dismissToast(t.id)}
+                                aria-label="Dismiss notification"
+                            >
+                                ×
+                            </button>
                         </div>
-
-                        {/* Right Panel */}
-                        {device !== 0 && (
-                            <div className="flex-1 bg-gray-50 p-6 rounded-xl shadow-md overflow-auto max-h-[500px]">
-                                <h2 className="text-xl font-semibold mb-4">
-                                    {deviceDisplayNames[selectedDevice]} Data
-                                </h2>
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="border-b border-gray-300">
-                                            <th className="p-2">Slot</th>
-                                            <th className="p-2">Name</th>
-                                            <th className="p-2">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {Object.keys(deviceData)
-                                            .map(Number)
-                                            .sort((a, b) => a - b)
-                                            .map((key) => {
-                                                const slot = deviceData[key];
-                                                return (
-                                                    <tr key={key} className="border-b border-gray-200">
-                                                        <td className="p-2">{key}</td>
-                                                        <td className="p-2">{slot.name}</td>
-                                                        <td className="p-2 space-x-2">
-                                                            <button
-                                                                onClick={() => openCreateModal(key)}
-                                                                className="px-3 py-1 bg-green-500 text-white rounded-xl hover:bg-green-600 transition text-sm"
-                                                            >
-                                                                Create
-                                                            </button>
-                                                            <button
-                                                                onClick={() => openFileBrowser(selectedDevice, key)}
-                                                                className="px-3 py-1 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition text-sm"
-                                                            >
-                                                                Load
-                                                            </button>
-                                                            <button
-                                                                onClick={() => removeSlot(selectedDevice, key)}
-                                                                className="px-3 py-1 bg-red-500 text-white rounded-xl hover:bg-red-600 transition text-sm"
-                                                            >
-                                                                Remove
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
                     </div>
-                )}
+                ))}
             </div>
 
-            {/* 🟢 CREATE MODAL */}
-            {createModalVisible && (
-                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl p-6 shadow-2xl w-96">
-                        <h3 className="text-lg font-bold mb-4 text-center">
-                            Create New {deviceDisplayNames[selectedDevice]}
-                        </h3>
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-6 relative">
+                <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-6xl">
+                    <div className="flex justify-between items-center mb-6">
+                        <h1 className="text-2xl font-bold">Emulation Dashboard</h1>
+                        <div className="flex gap-4">
+                            <button
+                                onClick={() => fetchStatus(ip)}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition"
+                            >
+                                Refresh
+                            </button>
+                            <button
+                                onClick={handleDisconnect}
+                                className="px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition"
+                            >
+                                Disconnect
+                            </button>
+                        </div>
+                    </div>
 
-                        <p className="text-sm text-center mb-4">
-                            Creating for slot <strong>{activeSlot}</strong>
-                        </p>
+                    {loading ? (
+                        <p className="text-center text-gray-600">⏳ Loading status...</p>
+                    ) : (
+                        <div className="flex flex-col lg:flex-row gap-6">
+                            {/* Left Panel */}
+                            <div className="flex-1 bg-gray-50 p-6 rounded-xl shadow-md">
+                                <p className="text-gray-700 mb-2">
+                                    Connected to: <strong>{ip}</strong>
+                                </p>
+                                <p className="text-gray-700 mb-2">
+                                    Emulation Status:{" "}
+                                    <strong
+                                        className={status === 1 ? "text-green-600" : "text-red-600"}
+                                    >
+                                        {status === 1 ? "Enabled" : "Disabled"}
+                                    </strong>
+                                </p>
+                                <p className="text-gray-700 mb-4">
+                                    Device: <strong>{deviceDisplayNames[selectedDevice]}</strong>
+                                </p>
 
-                        <div className="space-y-3">
-                            <div>
-                                <label className="block text-sm font-medium mb-1">ID</label>
-                                <input
-                                    type="number"
-                                    value={createId}
-                                    onChange={(e) => setCreateId(e.target.value)}
-                                    className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Enter ID"
-                                />
+                                <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                                    <button
+                                        onClick={() => toggleEmulation(true)}
+                                        disabled={status === 1}
+                                        className={`w-full px-4 py-2 rounded-xl text-white font-medium transition ${status === 1
+                                            ? "bg-gray-400 cursor-not-allowed"
+                                            : "bg-green-600 hover:bg-green-700"
+                                            }`}
+                                    >
+                                        Enable Emulation
+                                    </button>
+                                    <button
+                                        onClick={() => toggleEmulation(false)}
+                                        disabled={status === 0}
+                                        className={`w-full px-4 py-2 rounded-xl text-white font-medium transition ${status === 0
+                                            ? "bg-gray-400 cursor-not-allowed"
+                                            : "bg-red-600 hover:bg-red-700"
+                                            }`}
+                                    >
+                                        Disable Emulation
+                                    </button>
+                                </div>
+
+                                <div className="mb-6">
+                                    <label className="block text-sm font-medium mb-2">
+                                        Select Device Type
+                                    </label>
+                                    <select
+                                        value={selectedDevice}
+                                        onChange={handleDeviceChange}
+                                        className="border border-gray-300 rounded-xl p-2 w-full text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="none">None</option>
+                                        <option value="skylander">Skylander Portal</option>
+                                        <option value="infinity">Infinity Base</option>
+                                        <option value="dimensions">Dimensions Toypad</option>
+                                    </select>
+                                </div>
                             </div>
 
+                            {/* Right Panel */}
                             {selectedDevice === "skylander" && (
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">
-                                        Variant
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={createVar}
-                                        onChange={(e) => setCreateVar(e.target.value)}
-                                        className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
-                                        placeholder="Enter Variant"
-                                    />
+                                <SkylanderPanel {...commonPanelProps} />
+                            )}
+
+                            {selectedDevice === "infinity" && (
+                                <InfinityPanel {...commonPanelProps} />
+                            )}
+
+                            {selectedDevice === "dimensions" && (
+                                <DimensionsPanel
+                                    deviceData={deviceData}
+                                    onCreate={openCreateModal}
+                                    onLoad={(slot) => openFileBrowser(selectedDevice, slot)}
+                                    onRemove={(slot) => removeSlot(selectedDevice, slot)}
+                                    onMove={moveDimensionsSlot}   // ← new prop
+                                />
+                            )}
+
+                        </div>
+                    )}
+                </div>
+
+                {/* 🟢 CREATE MODAL */}
+                {createModalVisible && (
+                    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-xl p-6 shadow-2xl w-96">
+                            <h3 className="text-lg font-bold mb-4 text-center">
+                                Create New {createDisplayNames[selectedDevice]}
+                            </h3>
+
+                            <p className="text-sm text-center mb-4">
+                                Creating for slot <strong>{activeSlot}</strong>
+                            </p>
+
+
+                            {creatingFile ? (
+                                <div className="flex justify-center items-center h-48">
+                                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
                                 </div>
+                            ) : (
+                                <>
+                                    {/* Pick from list for Skylander / Infinity / Dimensions */}
+                                    {["skylander", "infinity", "dimensions"].includes(selectedDevice) && (
+                                        <div className="mb-4">
+                                            <button
+                                                onClick={openPickerForDevice}
+                                                className="w-full px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                                            >
+                                                Pick from list
+                                            </button>
+                                            <p className="mt-1 text-xs text-gray-500 text-center">
+                                                Search and select to auto-fill the fields.
+                                            </p>
+                                        </div>
+                                    )}
+
+
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1">ID</label>
+                                            <input
+                                                type="number"
+                                                value={createId}
+                                                onChange={(e) => setCreateId(e.target.value)}
+                                                className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+                                                placeholder="Enter ID"
+                                            />
+                                        </div>
+
+                                        {selectedDevice === "skylander" && (
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1">
+                                                    Variant
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    value={createVar}
+                                                    onChange={(e) => setCreateVar(e.target.value)}
+                                                    className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+                                                    placeholder="Enter Variant"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="flex justify-between mt-6">
+                                        <button
+                                            onClick={() => setCreateModalVisible(false)}
+                                            className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleCreate}
+                                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                                        >
+                                            Create
+                                        </button>
+                                    </div>
+                                </>
                             )}
                         </div>
-
-                        <div className="flex justify-between mt-6">
-                            <button
-                                onClick={() => setCreateModalVisible(false)}
-                                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleCreate}
-                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-                            >
-                                Create
-                            </button>
-                        </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* Existing File Browser Modal stays the same */}
-            {fileBrowserVisible && (
-                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                    <div className="bg-white border rounded-xl p-6 shadow-2xl w-[420px] h-[520px] overflow-auto relative">
-                        <h3 className="font-bold mb-1 text-lg text-center">Select File to Load</h3>
-                        <p className="text-center text-gray-600 text-sm mb-3">
-                            Loading into <strong>Slot {activeSlot}</strong> on{" "}
-                            <span className="font-medium">{deviceDisplayNames[selectedDevice]}</span>
-                        </p>
+                {pickerOpen && (
+                    <CharacterPicker
+                        items={pickerItems}             // [{ id, name }] or [{ id, variant, name }] for Skylander
+                        title={pickerTitle}
+                        onClose={() => setPickerOpen(false)}
+                        onSelect={(item) => {
+                            // Always set ID
+                            setCreateId(String(item.id));
 
-                        {/* Breadcrumbs */}
-                        <div className="flex flex-wrap items-center gap-1 mb-4 text-sm text-blue-600">
-                            <span onClick={() => fetchFiles("")} className="cursor-pointer hover:underline">
-                                Root
-                            </span>
-                            {currentPath
-                                .split("/")
-                                .filter((p) => p !== "")
-                                .map((part, index, arr) => {
-                                    const subPath = arr.slice(0, index + 1).join("/") + "/";
-                                    return (
-                                        <React.Fragment key={index}>
-                                            <span className="text-gray-400">/</span>
-                                            <span onClick={() => fetchFiles(subPath)} className="cursor-pointer hover:underline">
-                                                {part.replace("/", "")}
-                                            </span>
-                                        </React.Fragment>
-                                    );
-                                })}
-                        </div>
+                            // Only Skylander has a variant; Infinity & Dimensions ignore
+                            if (selectedDevice === "skylander") {
+                                // Some skylander datasets might use `variant` or `var`
+                                const v = item.variant ?? item.var ?? 0;
+                                setCreateVar(String(v));
+                            } else {
+                                setCreateVar(""); // keep clean for devices without variant
+                            }
+                            setPickerOpen(false);
+                        }}
+                    />
+                )}
 
-                        {loadingFiles ? (
-                            <div className="flex justify-center items-center h-48">
-                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-                            </div>
-                        ) : (
-                            <ul className="border border-gray-200 rounded-lg divide-y divide-gray-100">
-                                {currentFiles.length === 0 ? (
-                                    <li className="p-2 text-gray-500 italic text-center">(Empty directory)</li>
-                                ) : (
-                                    currentFiles.map((f, idx) => (
-                                        <li
-                                            key={idx}
-                                            onClick={() => handleFileClick(f)}
-                                            className={`cursor-pointer p-2 hover:bg-gray-100 ${f.endsWith("/") ? "font-semibold text-blue-700" : "text-gray-800"
-                                                }`}
-                                        >
-                                            {f}
-                                        </li>
-                                    ))
-                                )}
-                            </ul>
-                        )}
-
-                        <button
-                            onClick={() => setFileBrowserVisible(false)}
-                            className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
+                {/* File Browser Modal */}
+                {fileBrowserVisible && (
+                    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                        <div
+                            role="dialog"
+                            aria-modal="true"
+                            className="bg-white rounded-xl shadow-2xl w-[420px] max-w-[92vw] h-[520px] overflow-hidden flex flex-col"
                         >
-                            Close
-                        </button>
+                            {/* Header */}
+                            <div className="p-6 pb-3">
+                                <h3 className="font-bold text-lg text-center mb-1">Select File to Load</h3>
+                                <p className="text-center text-gray-600 text-sm">
+                                    Loading into <strong>Slot {activeSlot}</strong> on{" "}
+                                    <span className="font-medium">{deviceDisplayNames[selectedDevice]}</span>
+                                </p>
+
+                                {/* Breadcrumbs */}
+                                <div className="mt-3 flex flex-wrap items-center gap-1 text-sm text-blue-600">
+                                    <span onClick={() => fetchFiles("")} className="cursor-pointer hover:underline">
+                                        Root
+                                    </span>
+                                    {currentPath
+                                        .split("/")
+                                        .filter((p) => p !== "")
+                                        .map((part, index, arr) => {
+                                            const subPath = arr.slice(0, index + 1).join("/") + "/";
+                                            return (
+                                                <React.Fragment key={index}>
+                                                    <span className="text-gray-400">/</span>
+                                                    <span
+                                                        onClick={() => fetchFiles(subPath)}
+                                                        className="cursor-pointer hover:underline"
+                                                    >
+                                                        {part.replace("/", "")}
+                                                    </span>
+                                                </React.Fragment>
+                                            );
+                                        })}
+                                </div>
+                            </div>
+
+                            {/* Scrollable content area */}
+                            <div className="px-6 flex-1 overflow-y-auto">
+                                {loadingFiles ? (
+                                    <div className="flex justify-center items-center h-48">
+                                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                                    </div>
+                                ) : (
+                                    <ul className="border border-gray-200 rounded-lg divide-y divide-gray-100 mb-4">
+                                        {currentFiles.length === 0 ? (
+                                            <li className="p-2 text-gray-500 italic text-center">(Empty directory)</li>
+                                        ) : (
+                                            currentFiles.map((f, idx) => (
+                                                <li
+                                                    key={idx}
+                                                    onClick={() => handleFileClick(f)}
+                                                    className={`cursor-pointer p-2 hover:bg-gray-100 ${f.endsWith("/") ? "font-semibold text-blue-700" : "text-gray-800"
+                                                        }`}
+                                                >
+                                                    {f}
+                                                </li>
+                                            ))
+                                        )}
+                                    </ul>
+                                )}
+                            </div>
+
+                            {/* Fixed footer */}
+                            <div className="px-6 py-4 border-t bg-white">
+                                <button
+                                    onClick={() => setFileBrowserVisible(false)}
+                                    className="w-full px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )}
+
+            </div>
+        </>
     );
 }

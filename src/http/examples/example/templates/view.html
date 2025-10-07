@@ -1,0 +1,16 @@
+<%@ include <vector> %>
+<%@ param std::vector<std::string>& messages %>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="stylesheet" href="/static/style.css">
+    </head>
+    <body>
+        <a href="/messages/static"><button>Refresh</button></a>
+        <a href="/shutdown"><button>Stop server</button></a>
+        <hr>
+        <% for (const auto& x : messages) %>
+        <div class="message"><%- x %></div>
+    </body>
+</html>

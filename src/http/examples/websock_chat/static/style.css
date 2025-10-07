@@ -1,0 +1,209 @@
+* {
+    font-family: 'Inter', sans-serif;
+}
+
+/* width */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: rgb(236, 0, 0);
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+button {
+    cursor: pointer;
+}
+
+body {
+  padding: 0;
+  margin: 0;
+}
+
+.chat {
+    margin: 1em;
+    border: 1px solid #ddd;
+    border-radius: .3em;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.user {
+  display: flex;
+  flex-direction: row;
+  padding: 0 1em;
+  border-bottom: 1px solid #ddd;
+  background: #efefef;
+}
+.user>button {
+  height: 2em;
+  /*! margin: 0 auto; */
+  /*! display: inline-block; */
+  margin: auto;
+}
+.user>h3 {
+  flex: 1;
+}
+
+#messages {
+    display: flex;
+    flex-direction: column;
+    padding: .5em;
+    padding-bottom: 2em;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0px;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color .2s ease-in-out;
+}
+
+.chat:hover #messages {
+    scrollbar-color: #666 transparent;
+}
+
+.message {
+    margin: .2em 0;
+}
+
+.message>small {
+    font-family: 'Klee One', cursive;
+    display: block;
+}
+
+.message>p {
+    padding: .2em .5em;
+    background: #ccc;
+    border-radius: .2em;
+    line-height: 1.5em;
+    display: inline-block;
+    max-width: 50%;
+    min-width: 10%;
+    word-wrap: break-word;
+    margin: 0;
+    box-shadow: 2px 2px 4px #aaa;
+    text-align: initial;
+    transition: .2s margin ease-in-out;
+    margin-left: -25%;
+}
+
+.message.self {
+    text-align: right;
+}
+
+.message.self>p {
+    margin-right: -25%;
+}
+
+.message>p.animate {
+    margin: 0;
+}
+
+.message.self>p {
+    background: #ccf;
+}
+
+.chat-input {
+  height: 2em;
+  display: flex;
+  border-top: 1px solid #ddd;
+  flex-direction: row;
+}
+
+.chat-input>input {
+  flex: 1;
+  border: none;
+  padding: .2em .6em;
+}
+
+.login-form-holder {
+  width: 20em;
+  max-width: 100%;
+  margin: auto;
+  margin-top: 4em;
+  border: 1px solid #ddd;
+  padding: .5em .8em;
+  border-radius: .2em;
+  display: flex;
+  flex-direction: column;
+}
+
+
+.login-form-holder>h3 {
+  text-align: center;
+}
+
+.tabs {
+  display: flex;
+  flex-flow: row;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tabs>li {
+  background: #eee;
+  padding: .4em .8em;
+  display: block;
+  flex: 1;
+  text-align: center;
+  cursor: pointer;
+}
+
+.tabs>li.active {
+  background: #888;
+  color: white;
+  cursor: default;
+}
+
+.tab-controlled {
+    display: none;
+}
+
+.tab-controlled.active {
+    display: initial;
+}
+
+form {
+    margin-top: 1em;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-row {
+    width: 100%;
+    margin-bottom: .4em;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-row>input {
+    padding: .5em;
+    border: 1px solid #ccc;
+    border-radius: .2em;
+    flex: 1;
+}
+
+#form-error {
+    display: none;
+    color: white;
+    font-weight: 600;
+    text-align: center;
+    padding: .5em;
+    background: #d00;
+    margin-bottom: 1em;
+    border-radius: .2em;
+    box-shadow: 1px 1px 4px #666;
+}

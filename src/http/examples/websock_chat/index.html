@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Klee+One&display=swap" rel="stylesheet"> 
+        <link rel="stylesheet" href="/static/style.css" />
+        <title>TinyHTTP chat demo</title>
+    </head>
+    <body>
+        <noscript>
+            This demo requires javascript.
+        </noscript>
+        <div class="login-form-holder">
+            <h3>Hello!</h3>
+            <small id="form-error"></small>
+            <ul class="tabs">
+                <li id="tab:login" class="active">Log in</li>
+                <li id="tab:register">Register</li>
+            </ul>
+            <form id="login-form" class="tab-controlled active">
+                <div class="form-row">
+                    <input name="username" type="text" placeholder="Username">
+                </div>
+                <div class="form-row">
+                    <input name="password" type="password" placeholder="Password">
+                </div>
+                <div class="form-row">
+                    <button type="submit">Log in</button>
+                </div>
+            </form>
+            <form id="register-form" class="tab-controlled">
+                <div class="form-row">
+                    <input name="username" type="text" placeholder="Username">
+                </div>
+                <div class="form-row">
+                    <input name="password1" type="password" placeholder="Password">
+                </div>
+                <div class="form-row">
+                    <input name="password2" type="password" placeholder="Password again">
+                </div>
+                <div class="form-row">
+                    <input name="displayname" type="text" placeholder="Display name">
+                </div>
+                <div class="form-row">
+                    <button type="submit">Register</button>
+                </div>
+            </form>
+        </div>
+        <script type="text/javascript" src="static/login.js"></script>
+    </body>
+</html>

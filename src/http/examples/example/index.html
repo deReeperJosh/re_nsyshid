@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="stylesheet" href="/static/style.css" />
+        <title>TinyHTTP demo page</title>
+    </head>
+    <body>
+        <h1>Hello world!</h1>
+        <button onclick="_refresh()">Refresh</button>
+        <button onclick="_shutdown()">Stop server</button></a>
+        <input type="text" id="msg" />
+        <button onclick="_post()">Post message</button>
+        
+        <div style="margin: 10px 0">
+            <a href="/messages/static">Server-side rendered version</a>
+        </div>
+
+        <div id="messages"></div>
+        <script type="text/javascript" src="static/demo.js"></script>
+    </body>
+</html>

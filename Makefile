@@ -10,14 +10,15 @@ TOPDIR ?= $(CURDIR)
 
 include $(DEVKITPRO)/wups/share/wups_rules
 
+WUMS_ROOT := $(DEVKITPRO)/wums
 WUT_ROOT := $(DEVKITPRO)/wut
 
 #-------------------------------------------------------------------------------
 # Version used for the module and plugin
 #-------------------------------------------------------------------------------
 export VERSION_MAJOR	:=	0
-export VERSION_MINOR	:=	4
-export VERSION_PATCH	:=	3
+export VERSION_MINOR	:=	5
+export VERSION_PATCH	:=	0
 
 #-------------------------------------------------------------------------------
 # TARGET is the name of the output
@@ -28,9 +29,9 @@ export VERSION_PATCH	:=	3
 #-------------------------------------------------------------------------------
 TARGET		:=	re_nsyshid
 BUILD		:=	build
-SOURCES		:=	src src/utils src/devices src/config
+SOURCES		:=	src src/utils src/devices src/config src/http src/MiniJson/Source/src src/endpoints
 DATA		:=	data
-INCLUDES	:=	src src/include
+INCLUDES	:=	src src/include src/http src/MiniJson/Source/include
 
 #-------------------------------------------------------------------------------
 # options for code generation
@@ -48,7 +49,7 @@ CXXFLAGS	:= $(CFLAGS) -std=c++20
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-g $(ARCH) $(RPXSPECS) -Wl,-Map,$(notdir $*.map) $(WUPSSPECS) 
 
-LIBS	:= -lwups -lwut
+LIBS	:= -lnotifications -lwups -lwut
 
 ifeq ($(DEBUG),1)
 CXXFLAGS += -DDEBUG -g
@@ -64,7 +65,7 @@ endif
 # list of directories containing libraries, this must be the top level
 # containing include and lib
 #-------------------------------------------------------------------------------
-LIBDIRS	:= $(PORTLIBS) $(WUPS_ROOT) $(WUT_ROOT)
+LIBDIRS	:= $(PORTLIBS) $(WUPS_ROOT) $(WUMS_ROOT) $(WUT_ROOT)
 
 #-------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional
