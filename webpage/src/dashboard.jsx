@@ -3,6 +3,11 @@ import { useNavigate } from "react-router-dom";
 import SkylanderPanel from "./components/DevicePanels/SkylanderPanel";
 import InfinityPanel from "./components/DevicePanels/InfinityPanel";
 import DimensionsPanel from "./components/DevicePanels/DimensionsPanel";
+import CharacterPicker from "./components/Create/CharacterPicker";
+import { SKYLANDER_LIST } from "./data/skylanders";
+import { INFINITY_LIST } from "./data/infinity";
+import { DIMENSIONS_LIST } from "./data/dimensions";
+
 
 
 export default function Dashboard() {
@@ -21,6 +26,10 @@ export default function Dashboard() {
     const [createModalVisible, setCreateModalVisible] = useState(false);
     const [createId, setCreateId] = useState("");
     const [createVar, setCreateVar] = useState("");
+    const [pickerOpen, setPickerOpen] = useState(false);
+    const [pickerItems, setPickerItems] = useState([]);
+    const [pickerTitle, setPickerTitle] = useState("Choose Item");
+
 
     const navigate = useNavigate();
     // --- Toast / Popup system (animated) ---
@@ -281,6 +290,24 @@ export default function Dashboard() {
         }
     };
 
+    const openPickerForDevice = () => {
+        if (selectedDevice === "skylander") {
+            setPickerItems(SKYLANDER_LIST);
+            setPickerTitle("Choose Skylander");
+        } else if (selectedDevice === "infinity") {
+            setPickerItems(INFINITY_LIST);
+            setPickerTitle("Choose Infinity Figure");
+        } else if (selectedDevice === "dimensions") {
+            setPickerItems(DIMENSIONS_LIST);
+            setPickerTitle("Choose Dimensions Tag/Token");
+        } else {
+            setPickerItems([]);
+            setPickerTitle("Choose Item");
+        }
+        setPickerOpen(true);
+    };
+
+
 
     const commonPanelProps = {
         deviceData,                  // your current device data object from the API
@@ -446,6 +473,21 @@ export default function Dashboard() {
                                 </div>
                             ) : (
                                 <>
+                                    {/* Pick from list for Skylander / Infinity / Dimensions */}
+                                    {["skylander", "infinity", "dimensions"].includes(selectedDevice) && (
+                                        <div className="mb-4">
+                                            <button
+                                                onClick={openPickerForDevice}
+                                                className="w-full px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                                            >
+                                                Pick from list
+                                            </button>
+                                            <p className="mt-1 text-xs text-gray-500 text-center">
+                                                Search and select to auto-fill the fields.
+                                            </p>
+                                        </div>
+                                    )}
+
 
                                     <div className="space-y-3">
                                         <div>
@@ -493,6 +535,28 @@ export default function Dashboard() {
                             )}
                         </div>
                     </div>
+                )}
+
+                {pickerOpen && (
+                    <CharacterPicker
+                        items={pickerItems}             // [{ id, name }] or [{ id, variant, name }] for Skylander
+                        title={pickerTitle}
+                        onClose={() => setPickerOpen(false)}
+                        onSelect={(item) => {
+                            // Always set ID
+                            setCreateId(String(item.id));
+
+                            // Only Skylander has a variant; Infinity & Dimensions ignore
+                            if (selectedDevice === "skylander") {
+                                // Some skylander datasets might use `variant` or `var`
+                                const v = item.variant ?? item.var ?? 0;
+                                setCreateVar(String(v));
+                            } else {
+                                setCreateVar(""); // keep clean for devices without variant
+                            }
+                            setPickerOpen(false);
+                        }}
+                    />
                 )}
 
                 {/* File Browser Modal */}
