@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import SkylanderPanel from "./components/DevicePanels/SkylanderPanel";
+import InfinityPanel from "./components/DevicePanels/InfinityPanel";
+import DimensionsPanel from "./components/DevicePanels/DimensionsPanel";
+
 
 export default function Dashboard() {
     const [ip, setIp] = useState("");
@@ -230,7 +234,7 @@ export default function Dashboard() {
                 return;
             }
         }
-
+        setCreatingFile(true);
         try {
             const payload =
                 selectedDevice === "skylander"
@@ -256,8 +260,35 @@ export default function Dashboard() {
             setCreateModalVisible(false);
         } catch {
             toast("⚠️ Failed to create file", 'error')
+        } finally {
+            setCreatingFile(false);
         }
     };
+
+    const moveDimensionsSlot = async (oldSlot, newSlot) => {
+        try {
+            await fetch(`http://${ip}:8853/device/dimensions/move`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ oldSlot, newSlot }),
+            });
+            // Optional: toast success if you have a toast system
+            // toast(`✅ Moved from ${oldSlot} to ${newSlot}`, "success");
+            await fetchStatus(ip); // refresh panel
+        } catch (e) {
+            // toast("⚠️ Failed to move slot", "error");
+            console.error(e);
+        }
+    };
+
+
+    const commonPanelProps = {
+        deviceData,                  // your current device data object from the API
+        onCreate: openCreateModal,   // or whatever you call to show the create modal
+        onLoad: (slot) => openFileBrowser(selectedDevice, slot),
+        onRemove: (slot) => removeSlot(selectedDevice, slot),
+    };
+
 
     useEffect(() => {
         const savedIp = localStorage.getItem("deviceIp");
@@ -374,56 +405,24 @@ export default function Dashboard() {
                             </div>
 
                             {/* Right Panel */}
-                            {device !== 0 && (
-                                <div className="flex-1 bg-gray-50 p-6 rounded-xl shadow-md overflow-auto max-h-[500px]">
-                                    <h2 className="text-xl font-semibold mb-4">
-                                        {deviceDisplayNames[selectedDevice]} Data
-                                    </h2>
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="border-b border-gray-300">
-                                                <th className="p-2">Slot</th>
-                                                <th className="p-2">Name</th>
-                                                <th className="p-2">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {Object.keys(deviceData)
-                                                .map(Number)
-                                                .sort((a, b) => a - b)
-                                                .map((key) => {
-                                                    const slot = deviceData[key];
-                                                    return (
-                                                        <tr key={key} className="border-b border-gray-200">
-                                                            <td className="p-2">{key}</td>
-                                                            <td className="p-2">{slot.name}</td>
-                                                            <td className="p-2 space-x-2">
-                                                                <button
-                                                                    onClick={() => openCreateModal(key)}
-                                                                    className="px-3 py-1 bg-green-500 text-white rounded-xl hover:bg-green-600 transition text-sm"
-                                                                >
-                                                                    Create
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => openFileBrowser(selectedDevice, key)}
-                                                                    className="px-3 py-1 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition text-sm"
-                                                                >
-                                                                    Load
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => removeSlot(selectedDevice, key)}
-                                                                    className="px-3 py-1 bg-red-500 text-white rounded-xl hover:bg-red-600 transition text-sm"
-                                                                >
-                                                                    Remove
-                                                                </button>
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                        </tbody>
-                                    </table>
-                                </div>
+                            {selectedDevice === "skylander" && (
+                                <SkylanderPanel {...commonPanelProps} />
                             )}
+
+                            {selectedDevice === "infinity" && (
+                                <InfinityPanel {...commonPanelProps} />
+                            )}
+
+                            {selectedDevice === "dimensions" && (
+                                <DimensionsPanel
+                                    deviceData={deviceData}
+                                    onCreate={openCreateModal}
+                                    onLoad={(slot) => openFileBrowser(selectedDevice, slot)}
+                                    onRemove={(slot) => removeSlot(selectedDevice, slot)}
+                                    onMove={moveDimensionsSlot}   // ← new prop
+                                />
+                            )}
+
                         </div>
                     )}
                 </div>

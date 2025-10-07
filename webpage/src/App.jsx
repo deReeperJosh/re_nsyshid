@@ -41,8 +41,8 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-6">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-4 text-center">Local Server Checker</h1>
-        <label className="block text-sm font-medium mb-2">Device IP Address:</label>
+        <h1 className="text-2xl font-bold mb-4 text-center">re_nsyshid Server</h1>
+        <label className="block text-sm font-medium mb-2">Wii U IP Address:</label>
         <input
           type="text"
           value={inputValue}

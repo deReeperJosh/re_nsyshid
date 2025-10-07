@@ -197,4 +197,48 @@ void registerDimensionsEndpoints(HttpServer &server) {
                 }
                 return HttpResponse{404, res};
             });
+
+    server.when("/device/dimensions/colors")
+            ->requested([](const HttpRequest &req) {
+                miniJson::Json::_object res;
+                auto colors = g_dimensionstoypad.GetPadColors();
+                for (uint8_t i = 0; i < 3; i++) {
+                    miniJson::Json::_object color;
+                    color["red"]           = int(colors[i].red);
+                    color["green"]         = int(colors[i].green);
+                    color["blue"]          = int(colors[i].blue);
+                    color["speed"]         = int(colors[i].speed);
+                    color["cycles"]        = int(colors[i].cycles);
+                    color["whiteDuration"] = int(colors[i].whiteDuration);
+                    color["colorDuration"] = int(colors[i].colorDuration);
+                    switch (colors[i].colorType) {
+                        case DimensionsToypad::DimensionsColorType::NONE:
+                            color["type"] = "none";
+                            break;
+                        case DimensionsToypad::DimensionsColorType::COLOR:
+                            color["type"] = "color";
+                            break;
+                        case DimensionsToypad::DimensionsColorType::FADE:
+                            color["type"] = "fade";
+                            break;
+                        case DimensionsToypad::DimensionsColorType::FLASH:
+                            color["type"] = "flash";
+                            break;
+                    }
+                    std::string padName;
+                    switch (i) {
+                        case 0:
+                            padName = "top";
+                            break;
+                        case 1:
+                            padName = "left";
+                            break;
+                        case 2:
+                            padName = "right";
+                            break;
+                    }
+                    res[padName] = color;
+                }
+                return HttpResponse{200, res};
+            });
 }
