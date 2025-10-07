@@ -54,7 +54,7 @@ WUPS_USE_STORAGE("re_nsyshid"); // Unique id for the storage api
 EmulationStatus sEmulationStatus = EMULATION_STATUS_DEFAULT_VALUE;
 DeviceToEmulate sEmulatedDevice  = EMULATED_DEVICE_DEFAULT_VALUE;
 
-#define ENABLE_SERVER_DEFAULT_VALUE true
+#define ENABLE_SERVER_DEFAULT_VALUE false
 #define ENABLE_SERVER_CONFIG_ID     "enableServer"
 bool enableServer = ENABLE_SERVER_DEFAULT_VALUE;
 
