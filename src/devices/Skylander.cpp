@@ -1099,13 +1099,10 @@ bool SkylanderPortal::CreateSkylander(std::string pathName, uint16_t skyId, uint
     for (size_t index = 1; index < 0x10; index++) {
         memcpy(&data[(index * 0x40) + 0x36], &other_blocks, sizeof(other_blocks));
     }
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_int_distribution<int> dist(0, 255);
-    data[0] = dist(mt);
-    data[1] = dist(mt);
-    data[2] = dist(mt);
-    data[3] = dist(mt);
+    data[0] = rand() % 256;
+    data[1] = rand() % 256;
+    data[2] = rand() % 256;
+    data[3] = rand() % 256;
     data[4] = data[0] ^ data[1] ^ data[2] ^ data[3];
     data[5] = 0x81;
     data[6] = 0x01;
