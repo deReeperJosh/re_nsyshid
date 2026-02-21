@@ -17,7 +17,8 @@ enum DeviceToEmulate {
     NONE       = 0,
     SKYLANDER  = 1,
     INFINITY   = 2,
-    DIMENSIONS = 3
+    DIMENSIONS = 3,
+    KAMENRIDER = 4
 };
 
 void ResetClientLibrary();

@@ -103,7 +103,7 @@ enum SubFolder {
 
 class SkylanderUSBDevice : public Device {
 public:
-    SkylanderUSBDevice(/* args */);
+    SkylanderUSBDevice();
     ~SkylanderUSBDevice();
 
     bool GetDescriptor(uint8_t descType,
