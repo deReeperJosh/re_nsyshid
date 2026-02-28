@@ -285,6 +285,8 @@ static void enterCreationMenu(ConfigItemSelectSkylander *item) {
     item->currentPath  = item->rootPath + "Skylanders";
     std::filesystem::create_directory(item->currentPath);
     item->currentPath += "/";
+    std::string previousSkylander = item->selectedSkylander;
+    item->selectedSkylander.clear();
 
     while (true) {
         entries.clear();
@@ -405,6 +407,7 @@ static void enterCreationMenu(ConfigItemSelectSkylander *item) {
                     // create a new skylander
                     if (item->selectedSkylander.empty()) {
                         // no skylander selected, just return
+                        item->selectedSkylander = previousSkylander;
                         return;
                     }
                     if (g_skyportal.CreateSkylander(item->selectedSkylander, item->skylanderId.first, item->skylanderId.second)) {
@@ -422,6 +425,7 @@ static void enterCreationMenu(ConfigItemSelectSkylander *item) {
                 // create a new skylander
                 if (item->selectedSkylander.empty()) {
                     // no skylander selected, just return
+                    item->selectedSkylander = previousSkylander;
                     return;
                 }
                 if (g_skyportal.CreateSkylander(item->selectedSkylander, item->skylanderId.first, item->skylanderId.second)) {

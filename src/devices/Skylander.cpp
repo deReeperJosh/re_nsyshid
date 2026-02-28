@@ -1186,5 +1186,7 @@ void SkylanderPortal::Skylander::Save() {
     }
 
     int result = FSUtils::WriteToFile(filePath.c_str(), data.data(), data.size());
-    DEBUG_FUNCTION_LINE("WriteToFile returned %d", result);
+    if (result < (int) data.size()) {
+        DEBUG_FUNCTION_LINE("Failed to write entire Skylander file, returned %d", result);
+    }
 }

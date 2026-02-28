@@ -1340,7 +1340,9 @@ void DimensionsToypad::DimensionsMini::Save() {
     }
 
     int result = FSUtils::WriteToFile(filePath.c_str(), data.data(), data.size());
-    DEBUG_FUNCTION_LINE("WriteToFile returned %d", result);
+    if (result < (int) data.size()) {
+        DEBUG_FUNCTION_LINE("Failed to write entire Dimensions file, returned %d", result);
+    }
 }
 
 std::map<const uint32_t, const char *> DimensionsToypad::GetListMinifigs() {
