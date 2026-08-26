@@ -25,6 +25,8 @@
 #include "dir_icon.inc"
 #include "fav_icon.inc"
 
+using namespace Infinity;
+
 #define COLOR_BACKGROUND         Color(238, 238, 238, 255)
 #define COLOR_TEXT               Color(51, 51, 51, 255)
 #define COLOR_TEXT2              Color(72, 72, 72, 255)
@@ -49,9 +51,18 @@ enum ListEntryType {
     LIST_ENTRY_TYPE_TOP,
 };
 
+struct CreateFolder {
+    SubFolder subfolder;
+
+    struct CreateFolder *next;
+    struct CreateFolder *prev;
+};
+
 struct ListEntry {
     std::string name;
     ListEntryType type;
+    SubFolder createFolder;
+    uint32_t figureId;
     bool isFavorite;
 };
 
@@ -131,6 +142,100 @@ static void saveFavorites(ConfigItemSelectInfinity *item) {
     WUPSStorageAPI_StoreInt(nullptr, (favoritesKey + "Size").c_str(), saveBuf.size());
 
     favoritesUpdated = false;
+}
+
+static void populateCreateMenu(const std::optional<SubFolder> &subfolder, std::vector<ListEntry> &entries) {
+    if (!subfolder || subfolder.value() == SubFolder::TOP) {
+        entries.push_back(ListEntry{"Infinity 1.0", LIST_ENTRY_TYPE_DIR, SubFolder::ONE});
+        entries.push_back(ListEntry{"Infinity 2.0", LIST_ENTRY_TYPE_DIR, SubFolder::TWO});
+        entries.push_back(ListEntry{"Infinity 3.0", LIST_ENTRY_TYPE_DIR, SubFolder::THREE});
+    } else {
+        switch (subfolder.value()) {
+            case SubFolder::ONE:
+                entries.push_back(ListEntry{"Characters", LIST_ENTRY_TYPE_DIR, SubFolder::ONE_CHAR});
+                entries.push_back(ListEntry{"Playsets", LIST_ENTRY_TYPE_DIR, SubFolder::ONE_PLAYSET});
+                entries.push_back(ListEntry{"Power Discs", LIST_ENTRY_TYPE_DIR, SubFolder::ONE_POWER_DISCS});
+                break;
+            case SubFolder::TWO:
+                entries.push_back(ListEntry{"Characters", LIST_ENTRY_TYPE_DIR, SubFolder::TWO_CHAR});
+                entries.push_back(ListEntry{"Playsets", LIST_ENTRY_TYPE_DIR, SubFolder::TWO_PLAYSET});
+                entries.push_back(ListEntry{"Power Discs", LIST_ENTRY_TYPE_DIR, SubFolder::TWO_POWER_DISCS});
+                entries.push_back(ListEntry{"Toybox Games", LIST_ENTRY_TYPE_DIR, SubFolder::TWO_TOYBOX_GAME});
+                break;
+            case SubFolder::THREE:
+                entries.push_back(ListEntry{"Characters", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_CHAR});
+                entries.push_back(ListEntry{"Playsets", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_PLAYSET});
+                entries.push_back(ListEntry{"Power Discs", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_POWER_DISCS});
+                entries.push_back(ListEntry{"Toybox Games", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_TOYBOX_GAME});
+                break;
+            case SubFolder::ONE_CHAR:
+                entries.push_back(ListEntry{"Cars", LIST_ENTRY_TYPE_DIR, SubFolder::ONE_CHAR_CARS});
+                entries.push_back(ListEntry{"Frozen", LIST_ENTRY_TYPE_DIR, SubFolder::ONE_CHAR_FROZEN});
+                entries.push_back(ListEntry{"Monsters University", LIST_ENTRY_TYPE_DIR, SubFolder::ONE_CHAR_MONSTERS});
+                entries.push_back(ListEntry{"Phineas and Ferb", LIST_ENTRY_TYPE_DIR, SubFolder::ONE_CHAR_PHINEAS});
+                entries.push_back(ListEntry{"Pirates of the Caribbean", LIST_ENTRY_TYPE_DIR, SubFolder::ONE_CHAR_PIRATES});
+                entries.push_back(ListEntry{"The Incredibles", LIST_ENTRY_TYPE_DIR, SubFolder::ONE_CHAR_INCREDIBLES});
+                entries.push_back(ListEntry{"The Lone Ranger", LIST_ENTRY_TYPE_DIR, SubFolder::ONE_CHAR_RANGER});
+                entries.push_back(ListEntry{"Toy Story", LIST_ENTRY_TYPE_DIR, SubFolder::ONE_CHAR_TOY_STORY});
+                entries.push_back(ListEntry{"Wreck-It Ralph", LIST_ENTRY_TYPE_DIR, SubFolder::ONE_CHAR_WRECK_IT_RALPH});
+                entries.push_back(ListEntry{"Other", LIST_ENTRY_TYPE_DIR, SubFolder::ONE_CHAR_OTHER});
+                break;
+            case SubFolder::ONE_POWER_DISCS:
+                entries.push_back(ListEntry{"Series 1", LIST_ENTRY_TYPE_DIR, SubFolder::ONE_POWER_SERIES_ONE});
+                entries.push_back(ListEntry{"Series 2", LIST_ENTRY_TYPE_DIR, SubFolder::ONE_POWER_SERIES_TWO});
+                entries.push_back(ListEntry{"Series 3", LIST_ENTRY_TYPE_DIR, SubFolder::ONE_POWER_SERIES_THREE});
+                entries.push_back(ListEntry{"Exclusives", LIST_ENTRY_TYPE_DIR, SubFolder::ONE_POWER_EXCLUSIVES});
+                break;
+            case SubFolder::TWO_CHAR:
+                entries.push_back(ListEntry{"Aladdin", LIST_ENTRY_TYPE_DIR, SubFolder::TWO_CHAR_ALADDIN});
+                entries.push_back(ListEntry{"Big Hero 6", LIST_ENTRY_TYPE_DIR, SubFolder::TWO_CHAR_BIG_HERO});
+                entries.push_back(ListEntry{"Guardians of the Galaxy", LIST_ENTRY_TYPE_DIR, SubFolder::TWO_CHAR_GUARDIANS});
+                entries.push_back(ListEntry{"The Avengers", LIST_ENTRY_TYPE_DIR, SubFolder::TWO_CHAR_AVENGERS});
+                entries.push_back(ListEntry{"Ultimate Spider-Man", LIST_ENTRY_TYPE_DIR, SubFolder::TWO_CHAR_SPIDERMAN});
+                entries.push_back(ListEntry{"Other", LIST_ENTRY_TYPE_DIR, SubFolder::TWO_CHAR_OTHER});
+                break;
+            case SubFolder::TWO_POWER_DISCS:
+                entries.push_back(ListEntry{"Wave 1", LIST_ENTRY_TYPE_DIR, SubFolder::TWO_POWER_WAVE_ONE});
+                entries.push_back(ListEntry{"Wave 2", LIST_ENTRY_TYPE_DIR, SubFolder::TWO_POWER_WAVE_TWO});
+                entries.push_back(ListEntry{"Wave 3", LIST_ENTRY_TYPE_DIR, SubFolder::TWO_POWER_WAVE_THREE});
+                break;
+            case SubFolder::THREE_CHAR:
+                entries.push_back(ListEntry{"Alice Through the Looking Glass", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_CHAR_ALICE});
+                entries.push_back(ListEntry{"Avengers Age of Ultron", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_CHAR_AVENGERS});
+                entries.push_back(ListEntry{"Captain America Civil War", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_CHAR_CAPTAIN_AMERICA});
+                entries.push_back(ListEntry{"Finding Dory", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_CHAR_FINDING_DORY});
+                entries.push_back(ListEntry{"Inside Out", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_CHAR_INSIDE_OUT});
+                entries.push_back(ListEntry{"Mouse Universe", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_CHAR_MOUSE_UNIVERSE});
+                entries.push_back(ListEntry{"Star Wars", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_CHAR_STAR_WARS});
+                entries.push_back(ListEntry{"Star Wars Rebels", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_CHAR_STAR_WARS_REBELS});
+                entries.push_back(ListEntry{"Star Wars Clone Wars", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_CHAR_STAR_WARS_CLONE_WARS});
+                entries.push_back(ListEntry{"Star Wars Force Awakens", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_CHAR_STAR_WARS_FORCE_AWAKENS});
+                entries.push_back(ListEntry{"Tron", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_CHAR_TRON});
+                entries.push_back(ListEntry{"Zootopia", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_CHAR_ZOOTOPIA});
+                entries.push_back(ListEntry{"Other", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_CHAR_OTHER});
+                break;
+            case SubFolder::THREE_POWER_DISCS:
+                entries.push_back(ListEntry{"Launch", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_POWER_LAUNCH});
+                entries.push_back(ListEntry{"Post Launch", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_POWER_POST_LAUNCH});
+                entries.push_back(ListEntry{"Other", LIST_ENTRY_TYPE_DIR, SubFolder::THREE_POWER_OTHER});
+                break;
+            default:
+                std::vector<uint32_t> figuresForFolder = g_infinitybase.GetFiguresForFolder(subfolder.value());
+                for (const auto &figure : figuresForFolder) {
+                    std::pair<uint8_t, std::string> figureData = g_infinitybase.FindFigure(figure);
+                    if (figureData.first == 0) {
+                        continue;
+                    }
+
+                    ListEntry entry;
+                    entry.name     = figureData.second;
+                    entry.type     = LIST_ENTRY_TYPE_FILE;
+                    entry.figureId = figure;
+                    entries.push_back(entry);
+                }
+                break;
+        }
+    }
 }
 
 static void enterSelectionMenu(ConfigItemSelectInfinity *item) {
